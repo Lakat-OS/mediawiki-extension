@@ -19,12 +19,14 @@
 
 namespace MediaWiki\Extension\Lakat;
 
+use MediaWiki\Hook\BeforePageDisplayHook;
+use MediaWiki\Hook\SkinTemplateNavigation__UniversalHook;
 use MediaWiki\Title\Title;
 use SkinTemplate;
 
-class Hooks implements 
-	\MediaWiki\Hook\BeforePageDisplayHook,
-	\MediaWiki\Hook\SkinTemplateNavigation__UniversalHook
+class Hooks implements
+	BeforePageDisplayHook,
+	SkinTemplateNavigation__UniversalHook
 {
 
 	/**
@@ -40,15 +42,15 @@ class Hooks implements
 		}
 	}
 
-	# https://www.mediawiki.org/wiki/Manual:Hooks/SkinTemplateNavigation
-	# use the 'Universal' skin to add a link to the top navigation bar
-	
-	public function onSkinTemplateNavigation__Universal($sktemplate, &$links ): void {
-		
+	/**
+	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/SkinTemplateNavigation::Universal
+	 */
+	public function onSkinTemplateNavigation__Universal( $sktemplate, &$links ): void {
+
 		global $wgSitename, $wgServer;
-		
+
 		$currentTitle = $sktemplate->getTitle();
-		
+
 		$links['actions']['social'] = [
 			'class' => false,
 			'text' => $sktemplate->msg( 'lakat-social' )->text(),
@@ -56,29 +58,17 @@ class Hooks implements
 			'title' => $sktemplate->msg( 'lakat-social-tooltip' )->text(),
 		];
 
-		$links['actions']['social'] = [
+		$links['views']['review'] = [
 			'class' => false,
-			'text' => $wgSitename,
+			'text' => $sktemplate->msg( 'lakat-review' )->text(),
 			'href' => 'https://google.com',
-			'title' => $sktemplate->msg( 'lakat-social-tooltip' )->text(),
+			'title' => $sktemplate->msg( 'lakat-review-tooltip' )->text(),
 		];
-
-
-		
-
-		$links['views'] = [
-			'review' => [
-				'class' => false,
-				'text' => $sktemplate->msg( 'lakat-review' )->text(),
-				'href' => 'https://google.com',
-				'title' => $sktemplate->msg( 'lakat-review-tooltip' )->text(),
-			],
-			'diffs' => [
-				'class' => false,
-				'text' => $sktemplate->msg( 'lakat-diffs' )->text(),
-				'href' => 'https://example.com',
-				'title' => $sktemplate->msg( 'lakat-diffs-tooltip' )->text(),
-			]
+		$links['views']['diffs'] = [
+			'class' => false,
+			'text' => $sktemplate->msg( 'lakat-diffs' )->text(),
+			'href' => 'https://example.com',
+			'title' => $sktemplate->msg( 'lakat-diffs-tooltip' )->text(),
 		];
 
 		$urlParts = parse_url($wgServer);
@@ -94,7 +84,7 @@ class Hooks implements
 		$fullUrl = "http://localhost:" . $port . "/index.php/" . $currentTitle->getText();
 
 		$links['namespaces'] = [
-			'switchbranch' => [			
+			'switchbranch' => [
 				'class' => false,
 				'text' => $sktemplate->msg( 'lakat-switchbranch' )->text(),
 				'href' => $fullUrl,
@@ -119,27 +109,5 @@ class Hooks implements
 				'title' => $sktemplate->msg( 'lakat-token-tooltip' )->text(),
 			]
 		];
-
-		
-
-		
 	}
-
-	// public static function onPersonalUrls( array &$personal_urls, Title $title, SkinTemplate $skin ) {
-	// 	$personal_urls['branch'] = [
-	// 		'text' => 'Change Branch',
-	// 		'href' => 'https://google.com',
-	// 	];
-	// }
-
-
-	// public static function onSkinTemplateNavigation( SkinTemplate $skinTemplate, array &$links ) {
-	// 	$links['namespaces']['lakat'] = [
-	// 		'class' => false,
-	// 		'text' => 'Lakat',
-	// 		'href' => '/wiki/Lakat:Main_Page',
-	// 	];
-	// 	return true;
-	// }
-
 }
