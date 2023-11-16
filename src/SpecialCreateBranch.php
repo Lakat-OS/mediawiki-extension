@@ -7,7 +7,7 @@ use ContentHandler;
 use FormSpecialPage;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\SlotRecord;
-use MediaWiki\Status\Status;
+use Status;
 use Title;
 
 class SpecialCreateBranch extends FormSpecialPage
