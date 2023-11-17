@@ -2,6 +2,4 @@
 /vendor
 /node_modules
 .eslintcache
-.pyvenv
-.pyvenv
 .idea
