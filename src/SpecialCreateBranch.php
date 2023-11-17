@@ -72,7 +72,7 @@ class SpecialCreateBranch extends FormSpecialPage
 		}
 
 		$page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $title );
-		$text = ContentHandler::makeContent( $wikitext, null, CONTENT_MODEL_WIKITEXT);
+		$text = ContentHandler::makeContent( $wikitext, null, LakatContent::MODEL_ID);
 		$comment = CommentStoreComment::newUnsavedComment(
 			wfMessage( 'createbranch-revision-comment' )->inContentLanguage()->text()
 		);
