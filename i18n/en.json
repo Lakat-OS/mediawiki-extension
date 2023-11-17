@@ -24,5 +24,8 @@
 	"createbranch-token": "Token",
 	"createbranch-type-proper": "Proper branch",
 	"createbranch-type-twig": "Twig",
-	"createbranch-allow-conflicts": "Allow conflicts"
+	"createbranch-allow-conflicts": "Allow conflicts",
+	"createbranch-error-already-exists": "Branch with the same name already exists",
+	"createbranch-error-invalid-name": "Branch name is invalid",
+	"createbranch-revision-comment": "Initial revision"
 }
