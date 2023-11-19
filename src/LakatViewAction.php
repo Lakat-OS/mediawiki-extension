@@ -12,25 +12,9 @@ class LakatViewAction extends ViewAction {
 		parent::show();
 
 		$this->getOutput()->clearHTML();
-		$text = $this->loadBranch();
+
+		$text = LakatStorage::getInstance()->loadBranch($this->getTitle()->getId());
 		$this->getOutput()->addWikiTextAsContent($text);
 
-	}
-
-	/**
-	 * This is stub for lakat storage
-	 */
-	private function loadBranch()
-	{
-		$filename = $this->getPageDataFilename();
-		if (!file_exists($filename)) {
-			return '';
-		}
-		return file_get_contents($filename);
-	}
-
-	private function getPageDataFilename(): string
-	{
-		return MW_INSTALL_PATH . '/cache/page_' . $this->getTitle()->getId() . '.txt';
 	}
 }
