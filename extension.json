@@ -31,7 +31,9 @@
 	},
 	"Hooks": {
 		"BeforePageDisplay": "LakatHooks",
-		"SkinTemplateNavigation::Universal": "LakatHooks"
+		"SkinTemplateNavigation::Universal": "LakatHooks",
+		"CustomEditor": "LakatHooks",
+		"ContentHandlerDefaultModelFor": "LakatHooks"
 	},
 	"ContentHandlers": {
 		"lakat": "MediaWiki\\Extension\\Lakat\\LakatContentHandler"
