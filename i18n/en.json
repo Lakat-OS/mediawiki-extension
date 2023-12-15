@@ -27,5 +27,8 @@
 	"createbranch-allow-conflicts": "Allow conflicts",
 	"createbranch-error-already-exists": "Branch with the same name already exists",
 	"createbranch-error-invalid-name": "Branch name is invalid",
-	"createbranch-revision-comment": "Initial revision"
+	"createbranch-revision-comment": "Initial revision",
+	"prefs-lakat": "Lakat",
+	"prefs-options": "Options",
+	"lakat-default-branch": "Default branch"
 }

@@ -23,6 +23,7 @@ use MediaWiki\Hook\BeforePageDisplayHook;
 use MediaWiki\Hook\SkinTemplateNavigation__UniversalHook;
 use MediaWiki\Title\Title;
 use SkinTemplate;
+use User;
 
 class Hooks implements
 	BeforePageDisplayHook,
@@ -108,6 +109,20 @@ class Hooks implements
 				'href' => 'https://another-example.com',
 				'title' => $sktemplate->msg( 'lakat-token-tooltip' )->text(),
 			]
+		];
+	}
+
+	/**
+	 * Here we add new user preferences
+	 *
+	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/GetPreferences
+	 */
+	public static function onGetPreferences( User $user, array &$preferences ) {
+		// Default Lakat branch for the user
+		$preferences['lakat-default-branch'] = [
+			'section' => 'lakat/options',
+			'type' => 'text',
+			'label-message' => 'lakat-default-branch',
 		];
 	}
 }
