@@ -11,6 +11,10 @@ class SpecialBranches extends SpecialPage {
 		parent::__construct( 'Branches' );
 	}
 
+	protected function getGroupName() {
+		return 'lakat';
+	}
+
 	public function execute( $subPage ) {
 		parent::execute( $subPage );
 
@@ -24,9 +28,5 @@ class SpecialBranches extends SpecialPage {
 			$html .= Html::closeElement( 'ul' );
 			$this->getOutput()->addHTML( $html );
 		}
-	}
-
-	protected function getGroupName() {
-		return 'lakat';
 	}
 }

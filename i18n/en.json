@@ -31,5 +31,6 @@
 	"createbranch-allow-conflicts": "Allow conflicts",
 	"createbranch-error-already-exists": "Branch with the same name already exists",
 	"createbranch-error-invalid-name": "Branch name is invalid",
+	"createbranch-error-remote": "Failed to create remote branch",
 	"createbranch-revision-comment": "Initial revision"
 }

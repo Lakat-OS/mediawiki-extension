@@ -57,7 +57,7 @@ class LakatStorageStub implements LakatStorageInterface {
 	}
 
 	private function getSlug( string $name ) {
-		return preg_replace( '/[^a-z]/', '_', strtolower( trim( $name ) ) );
+		return preg_replace( '/[^a-z0-9]/', '_', strtolower( trim( $name ) ) );
 	}
 
 	private function getBasePath(): string
