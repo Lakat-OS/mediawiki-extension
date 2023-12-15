@@ -5,6 +5,7 @@ namespace MediaWiki\Extension\Lakat;
 use Html;
 use MediaWiki\Extension\Lakat\Storage\LakatStorageStub;
 use SpecialPage;
+use Title;
 
 class SpecialBranches extends SpecialPage {
 	public function __construct() {
@@ -23,7 +24,8 @@ class SpecialBranches extends SpecialPage {
 			$linkRenderer = $this->getLinkRenderer();
 			$html = Html::openElement( 'ul' );
 			foreach ( $branches as $branch ) {
-				$html .= Html::rawElement( 'li', [], $linkRenderer->makeKnownLink( $branch['name'] ) ) . "\n";
+				$link = $linkRenderer->makeKnownLink( Title::newFromText( $branch['name'] ) );
+				$html .= Html::rawElement( 'li', [], $link ) . "\n";
 			}
 			$html .= Html::closeElement( 'ul' );
 			$this->getOutput()->addHTML( $html );
