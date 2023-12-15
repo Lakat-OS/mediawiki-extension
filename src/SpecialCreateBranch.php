@@ -53,7 +53,11 @@ class SpecialCreateBranch extends FormSpecialPage
 	}
 
 	public function onSubmit(array $data) {
-		$this->createdPageTitle = Title::newFromText($data[ 'BranchName' ]);
+		$branchName = $data[ 'BranchName' ];
+
+		$this->setDefaultBranch( $branchName );
+
+		$this->createdPageTitle = Title::newFromText($branchName);
 
 		$text = "Create branch request parameters:\n";
 		foreach ($data as $key => $val) {
@@ -61,6 +65,13 @@ class SpecialCreateBranch extends FormSpecialPage
 		}
 
 		return $this->createPage($this->createdPageTitle, $text);
+	}
+
+	private function setDefaultBranch( string $branchName ): void {
+		$user = $this->getUser();
+		$userOptionsManager = MediaWikiServices::getInstance()->getUserOptionsManager();
+		$userOptionsManager->setOption( $user, 'lakat-default-branch', $branchName );
+		$userOptionsManager->saveOptions( $user );
 	}
 
 	private function createPage(Title $title, string $wikitext = '') {
