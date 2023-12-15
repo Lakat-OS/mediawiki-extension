@@ -28,6 +28,16 @@ class LakatStorageStub implements LakatStorageInterface {
 		return $branchId;
 	}
 
+	public function branches(): array {
+		$branches = [];
+		foreach (glob($this->getBasePath() . '/branch_*') as $dir) {
+			$id = substr($dir, strrpos($dir, '/'));
+			$options = json_decode(file_get_contents($dir . '/.branch'), true, 512, JSON_THROW_ON_ERROR);
+			$branches[] = compact('id') + $options;
+		}
+		return  $branches;
+	}
+
 	public function submitFirst( string $branchId, string $content ): string {
 		$articleId = uniqid('article_');
 

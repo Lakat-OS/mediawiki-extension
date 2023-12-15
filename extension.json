@@ -37,6 +37,7 @@
 		"lakat": "MediaWiki\\Extension\\Lakat\\LakatContentHandler"
 	},
 	"SpecialPages": {
+		"Branches": "MediaWiki\\Extension\\Lakat\\SpecialBranches",
 		"CreateBranch": "MediaWiki\\Extension\\Lakat\\SpecialCreateBranch"
 	},
 	"ExtensionMessagesFiles": {

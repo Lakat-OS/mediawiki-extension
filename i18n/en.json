@@ -19,6 +19,10 @@
 	"lakat-token-tooltip": "Enter your token",
 	"lakat-social": "Social",
 	"lakat-social-tooltip": "Share the current page",
+
+	"specialpages-group-lakat": "Lakat",
+	"branches": "Branches",
+	"branches-summary": "List of remote branches",
 	"createbranch": "Create Branch",
 	"createbranch-name": "Branch name",
 	"createbranch-token": "Token",
