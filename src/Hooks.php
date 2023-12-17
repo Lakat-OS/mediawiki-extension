@@ -174,16 +174,19 @@ class Hooks implements
 				$pageUpdater->saveRevision(CommentStoreComment::newUnsavedComment('Lakat: added article metadata'), EDIT_SUPPRESS_RC);
 			} else {
 				// get articleId from lakat slot
+				if (!$revisionRecord->hasSlot('lakat')) {
+					throw new Exception(sprintf( "Article '''%s''' have no metadata slot", $title->getText() ));
+				}
 				$slotRecord = $revisionRecord->getSlot('lakat');
 				$articleMetadataContent = $slotRecord->getContent();
-				if (! $articleMetadataContent instanceof JsonContent) {
-					throw new LogicException("'lakat' slot content is invalid");
+				if (! $articleMetadataContent instanceof JsonContent || !$articleMetadataContent->isValid()) {
+					throw new Exception(sprintf( "Article '''%s''' has invalid metadata slot", $title->getText() ));
 				}
-				$articleMetadata = $articleMetadataContent->getData();
-				if (!isset($articleMetadata['articleId'])) {
-					throw new LogicException("'lakat' slot doesn't contain articleId");
+				$articleMetadata = $articleMetadataContent->getData()->getValue();
+				if (!isset($articleMetadata->articleId)) {
+					throw new Exception(sprintf( "Article '''%s''' has invalid metadata: articleId field not set", $title->getText() ));
 				}
-				$articleId = $articleMetadata['articleId'];
+				$articleId = $articleMetadata->articleId;
 
 				LakatStorageStub::getInstance()->submitNext($branchId, $articleId, $blob);
 			}
