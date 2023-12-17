@@ -25,13 +25,17 @@
 	},
 	"HookHandlers": {
 		"LakatHooks": {
-			"class": "MediaWiki\\Extension\\Lakat\\Hooks",
-			"services": []
+			"class": "MediaWiki\\Extension\\Lakat\\Hooks"
 		}
 	},
 	"Hooks": {
+		"MediaWikiServices": "LakatHooks",
 		"BeforePageDisplay": "LakatHooks",
-		"SkinTemplateNavigation::Universal": "LakatHooks"
+		"SkinTemplateNavigation::Universal": "LakatHooks",
+		"PageSaveComplete": "LakatHooks"
+	},
+	"Actions": {
+		"view": "MediaWiki\\Extension\\Lakat\\LakatViewAction"
 	},
 	"ContentHandlers": {
 		"lakat": "MediaWiki\\Extension\\Lakat\\LakatContentHandler"

@@ -19,15 +19,47 @@
 
 namespace MediaWiki\Extension\Lakat;
 
+use CommentStoreComment;
+use ContentHandler;
+use Exception;
+use JsonContent;
+use LogicException;
+use MediaWiki\EditPage\EditPage;
+use MediaWiki\Extension\Lakat\Storage\LakatStorageStub;
 use MediaWiki\Hook\BeforePageDisplayHook;
+use MediaWiki\Hook\MediaWikiServicesHook;
 use MediaWiki\Hook\SkinTemplateNavigation__UniversalHook;
+use MediaWiki\Language\RawMessage;
+use MediaWiki\MediaWikiServices;
+use MediaWiki\Revision\RenderedRevision;
+use MediaWiki\Revision\RevisionRecord;
+use MediaWiki\Revision\SlotRecord;
+use MediaWiki\Revision\SlotRoleRegistry;
+use MediaWiki\Settings\Source\Format\JsonFormat;
+use MediaWiki\Storage\EditResult;
+use MediaWiki\Storage\Hook\PageSaveCompleteHook;
+use MediaWiki\Storage\PageUpdater;
 use MediaWiki\Title\Title;
+use MediaWiki\User\UserIdentity;
 use SkinTemplate;
+use Status;
+use WikiPage;
 
 class Hooks implements
+	MediaWikiServicesHook,
 	BeforePageDisplayHook,
-	SkinTemplateNavigation__UniversalHook
+	SkinTemplateNavigation__UniversalHook,
+	PageSaveCompleteHook
 {
+	public function onMediaWikiServices( $services ): void {
+		$services->addServiceManipulator(
+			'SlotRoleRegistry',
+			function (
+				SlotRoleRegistry $registry
+			) {
+				$registry->defineRoleWithModel( 'lakat', CONTENT_MODEL_JSON );
+			});
+	}
 
 	/**
 	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/BeforePageDisplay
@@ -109,5 +141,52 @@ class Hooks implements
 				'title' => $sktemplate->msg( 'lakat-token-tooltip' )->text(),
 			]
 		];
+	}
+
+	public function onPageSaveComplete( $wikiPage, $user, $summary, $flags, $revisionRecord, $editResult ): void {
+		// Article is a subpage of a branch page
+		$title = $wikiPage->getTitle();
+		if ($title->isSubpage()) {
+			// Retrieve branch page to extract branch id from it
+			$branchTitle = $title->getBaseTitle();
+			$branchPage = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $branchTitle );
+			if ( !$branchPage->exists() ) {
+				throw new Exception(sprintf( "Branch '''%s''' doesn't exist locally", $branchTitle->getText() ));
+			}
+
+			// Parse branch id from branch page
+			$branchContent = $branchPage->getContent();
+			$branchData = $branchContent instanceof JsonContent ? $branchContent->getData() : null;
+			if ( $branchData === null || !$branchData->isGood() ) {
+				throw new Exception(sprintf( "Branch page '''%s''' is invalid", $branchTitle->getText() ));
+			}
+			$branchId = $branchData->getValue()->BranchId;
+
+			// Save page in remote storage
+			$blob = $revisionRecord->getContent(SlotRecord::MAIN)->serialize();
+			if ($editResult->isNew()) {
+				$articleId = LakatStorageStub::getInstance()->submitFirst($branchId, $blob);
+
+				// save articleId in lakat slot
+				$articleMetadataContent = ContentHandler::makeContent(\FormatJson::encode(compact('articleId')), null, CONTENT_MODEL_JSON);
+				$pageUpdater = $wikiPage->newPageUpdater( $user );
+				$pageUpdater->setContent('lakat', $articleMetadataContent);
+				$pageUpdater->saveRevision(CommentStoreComment::newUnsavedComment('Lakat: added article metadata'), EDIT_SUPPRESS_RC);
+			} else {
+				// get articleId from lakat slot
+				$slotRecord = $revisionRecord->getSlot('lakat');
+				$articleMetadataContent = $slotRecord->getContent();
+				if (! $articleMetadataContent instanceof JsonContent) {
+					throw new LogicException("'lakat' slot content is invalid");
+				}
+				$articleMetadata = $articleMetadataContent->getData();
+				if (!isset($articleMetadata['articleId'])) {
+					throw new LogicException("'lakat' slot doesn't contain articleId");
+				}
+				$articleId = $articleMetadata['articleId'];
+
+				LakatStorageStub::getInstance()->submitNext($branchId, $articleId, $blob);
+			}
+		}
 	}
 }
