@@ -165,29 +165,14 @@ class Hooks implements
 			// Save page in remote storage
 			$blob = $revisionRecord->getContent(SlotRecord::MAIN)->serialize();
 			if ($editResult->isNew()) {
+				// create article on remote storage
 				$articleId = LakatStorageStub::getInstance()->submitFirst($branchId, $blob);
-
-				// save articleId in lakat slot
-				$articleMetadataContent = ContentHandler::makeContent(\FormatJson::encode(compact('articleId')), null, CONTENT_MODEL_JSON);
-				$pageUpdater = $wikiPage->newPageUpdater( $user );
-				$pageUpdater->setContent('lakat', $articleMetadataContent);
-				$pageUpdater->saveRevision(CommentStoreComment::newUnsavedComment('Lakat: added article metadata'), EDIT_SUPPRESS_RC);
+				// save article id in page metadata
+				LakatArticleMetadata::saveArticleId($wikiPage, $user, $articleId);
 			} else {
-				// get articleId from lakat slot
-				if (!$revisionRecord->hasSlot('lakat')) {
-					throw new Exception(sprintf( "Article '''%s''' have no metadata slot", $title->getText() ));
-				}
-				$slotRecord = $revisionRecord->getSlot('lakat');
-				$articleMetadataContent = $slotRecord->getContent();
-				if (! $articleMetadataContent instanceof JsonContent || !$articleMetadataContent->isValid()) {
-					throw new Exception(sprintf( "Article '''%s''' has invalid metadata slot", $title->getText() ));
-				}
-				$articleMetadata = $articleMetadataContent->getData()->getValue();
-				if (!isset($articleMetadata->articleId)) {
-					throw new Exception(sprintf( "Article '''%s''' has invalid metadata: articleId field not set", $title->getText() ));
-				}
-				$articleId = $articleMetadata->articleId;
-
+				// get articleId from page metadata
+				$articleId = LakatArticleMetadata::getArticleId($wikiPage);
+				// update article on remote storage
 				LakatStorageStub::getInstance()->submitNext($branchId, $articleId, $blob);
 			}
 		}

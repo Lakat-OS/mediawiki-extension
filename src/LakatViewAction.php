@@ -2,12 +2,14 @@
 
 namespace MediaWiki\Extension\Lakat;
 
+use Exception;
 use JsonContent;
 use LogicException;
 use MediaWiki\Extension\Lakat\Storage\LakatStorageStub;
 use MediaWiki\Language\RawMessage;
 use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Title\Title;
 use ViewAction;
 
 class LakatViewAction extends ViewAction {
@@ -42,43 +44,23 @@ class LakatViewAction extends ViewAction {
 			}
 			$branchId = $branchData->getValue()->BranchId;
 
-			// if article doesn't exist then allow user to create it
+			// if article doesn't exist yet then nothing to load from remote storage
 			if (!$title->exists()) {
 				return;
 			}
 
-			// ignore content from local storage
-//			$this->getOutput()->clearHTML();
-
 			// Load page from remote storage
-			// Get articleId from lakat slot
-			$revisionRecord = $this->getWikiPage()->getRevisionRecord();
-			if (!$revisionRecord->hasSlot('lakat')) {
-				$this->getOutput()->showFatalError(
-					new RawMessage(sprintf( "Article '''%s''' have no metadata slot", $title->getText() ))
-				);
-				return;
-			}
-			$slotRecord = $revisionRecord->getSlot('lakat');
-			$articleMetadataContent = $slotRecord->getContent();
-			if (! $articleMetadataContent instanceof JsonContent || !$articleMetadataContent->isValid()) {
-				$this->getOutput()->showFatalError(
-					new RawMessage(sprintf( "Article '''%s''' has invalid metadata slot", $title->getText() ))
-				);
-				return;
-			}
-			$articleMetadata = $articleMetadataContent->getData()->getValue();
-			if (!isset($articleMetadata->articleId)) {
-				$this->getOutput()->showFatalError(
-					new RawMessage(sprintf( "Article '''%s''' has invalid metadata: articleId field not set", $title->getText() ))
-				);
-			}
-			$articleId = $articleMetadata->articleId;
-
-			// output content from remote storage
+//			$this->getOutput()->clearHTML();
 			$this->getOutput()->addWikiTextAsContent('== Content from remote storage ==');
-			$text = LakatStorageStub::getInstance()->fetchArticle($branchId, $articleId);
-			$this->getOutput()->addWikiTextAsContent($text);
+			try {
+				$articleId = LakatArticleMetadata::getArticleId( $this->getWikiPage() );
+				$text = LakatStorageStub::getInstance()->fetchArticle($branchId, $articleId);
+				$this->getOutput()->addWikiTextAsContent($text);
+			} catch ( Exception $e) {
+				$this->getOutput()->showFatalError( new RawMessage($e->getMessage()) );
+				return;
+			}
+
 		}
 	}
 }
