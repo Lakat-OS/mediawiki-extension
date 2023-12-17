@@ -52,7 +52,14 @@ class LakatViewAction extends ViewAction {
 
 			// Load page from remote storage
 			// Get articleId from lakat slot
-			$slotRecord = $this->getWikiPage()->getRevisionRecord()->getSlot('lakat');
+			$revisionRecord = $this->getWikiPage()->getRevisionRecord();
+			if (!$revisionRecord->hasSlot('lakat')) {
+				$this->getOutput()->showFatalError(
+					new RawMessage(sprintf( "Article '''%s''' have no metadata slot", $title->getText() ))
+				);
+				return;
+			}
+			$slotRecord = $revisionRecord->getSlot('lakat');
 			$articleMetadataContent = $slotRecord->getContent();
 			if (! $articleMetadataContent instanceof JsonContent || !$articleMetadataContent->isValid()) {
 				$this->getOutput()->showFatalError(
