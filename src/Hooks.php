@@ -147,20 +147,7 @@ class Hooks implements
 		// Article is a subpage of a branch page
 		$title = $wikiPage->getTitle();
 		if ($title->isSubpage()) {
-			// Retrieve branch page to extract branch id from it
-			$branchTitle = $title->getBaseTitle();
-			$branchPage = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $branchTitle );
-			if ( !$branchPage->exists() ) {
-				throw new Exception(sprintf( "Branch '''%s''' doesn't exist locally", $branchTitle->getText() ));
-			}
-
-			// Parse branch id from branch page
-			$branchContent = $branchPage->getContent();
-			$branchData = $branchContent instanceof JsonContent ? $branchContent->getData() : null;
-			if ( $branchData === null || !$branchData->isGood() ) {
-				throw new Exception(sprintf( "Branch page '''%s''' is invalid", $branchTitle->getText() ));
-			}
-			$branchId = $branchData->getValue()->BranchId;
+			$branchId = LakatArticleMetadata::getBranchId($title->getRootText());
 
 			// Save page in remote storage
 			$blob = $revisionRecord->getContent(SlotRecord::MAIN)->serialize();
