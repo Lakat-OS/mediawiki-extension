@@ -10,30 +10,22 @@ use JsonContent;
 use MediaWiki\Language\RawMessage;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Permissions\Authority;
+use MediaWiki\Revision\RevisionRecord;
 use MediaWiki\Title\Title;
 use MediaWiki\User\UserIdentity;
 use WikiPage;
 
 class LakatArticleMetadata {
 	public static function getBranchId( string $branchName ) {
-		// Retrieve branch page to extract branch id from it
 		$page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( Title::newFromText($branchName) );
 		if ( !$page->exists() ) {
-			throw new Exception(sprintf( "Branch '''%s''' page doesn't exist", $branchName ));
+			throw new Exception("Branch page doesn't exist");
 		}
-
-		// Parse branch id from branch page
-		$content = $page->getContent();
-		$data = $content instanceof JsonContent ? $content->getData() : null;
-		if ( $data === null || !$data->isGood()) {
-			throw new Exception(sprintf( "Branch '''%s''' page is invalid", $branchName ));
+		$metadata = self::getPageMetadata($page);
+		if (!isset($metadata->BranchId)) {
+			throw new Exception('Invalid metadata: BranchId field is not set');
 		}
-		$value = $data->getValue();
-		if (!isset($value->BranchId)) {
-			throw new Exception(sprintf( "Branch '''%s''' has invalid page: BranchId field not set", $branchName ));
-		}
-
-		return $data->getValue()->BranchId;
+		return $metadata->BranchId;
 	}
 
 	public static function saveArticleId( WikiPage $wikiPage, Authority|UserIdentity $user, string $articleId): void
@@ -45,18 +37,26 @@ class LakatArticleMetadata {
 	}
 
 	public static function getArticleId( WikiPage $wikiPage ): string {
-		$revisionRecord = $wikiPage->getRevisionRecord();
+		$metadata = self::getPageMetadata($wikiPage);
+		if (!isset($metadata->articleId)) {
+			throw new Exception('Article has invalid metadata: articleId field is not set');
+		}
+		return $metadata->articleId;
+	}
+
+	private static function getPageMetadata(WikiPage $page): object {
+		$revisionRecord = $page->getRevisionRecord();
 		if (!$revisionRecord->hasSlot('lakat')) {
-			throw new Exception(sprintf( "Article '''%s''' has no metadata slot", $wikiPage->getTitle()->getText() ));
+			throw new Exception('Page has no metadata slot');
 		}
 		$content = $revisionRecord->getContent('lakat');
 		if (! $content instanceof JsonContent || !$content->isValid()) {
-			throw new Exception(sprintf( "Article '''%s''' has invalid metadata slot", $wikiPage->getTitle()->getText() ));
+			throw new Exception('Page has invalid metadata slot');
 		}
-		$articleMetadata = $content->getData()->getValue();
-		if (!isset($articleMetadata->articleId)) {
-			throw new Exception(sprintf( "Article '''%s''' has invalid metadata: articleId field not set", $wikiPage->getTitle()->getText() ));
+		$data = $content->getData();
+		if ( $data === null || !$data->isGood()) {
+			throw new Exception('Page has invalid metadata');
 		}
-		return $articleMetadata->articleId;
+		return $data->getValue();
 	}
 }

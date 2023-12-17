@@ -90,7 +90,10 @@ class SpecialCreateBranch extends FormSpecialPage {
 			wfMessage( 'createbranch-revision-comment' )->inContentLanguage()->text()
 		);
 
-		$page->newPageUpdater( $this->getUser() )->setContent( SlotRecord::MAIN, $content )->saveRevision( $comment );
+		$page->newPageUpdater( $this->getUser() )
+			->setContent( SlotRecord::MAIN, ContentHandler::makeContent('Branch root page', $title) )
+			->setContent( 'lakat', $content )
+			->saveRevision( $comment );
 
 		return Status::newGood();
 	}
