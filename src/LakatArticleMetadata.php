@@ -28,12 +28,17 @@ class LakatArticleMetadata {
 		return $metadata->BranchId;
 	}
 
-	public static function saveArticleId( WikiPage $wikiPage, Authority|UserIdentity $user, string $articleId): void
+	public static function saveArticleId( WikiPage $wikiPage, UserIdentity $user, string $articleId): void
 	{
 		$articleMetadataContent = ContentHandler::makeContent( FormatJson::encode(compact('articleId')), null, CONTENT_MODEL_JSON);
 		$pageUpdater = $wikiPage->newPageUpdater( $user );
 		$pageUpdater->setContent('lakat', $articleMetadataContent);
 		$pageUpdater->saveRevision(CommentStoreComment::newUnsavedComment('Lakat: added article metadata'), EDIT_SUPPRESS_RC);
+	}
+
+	public static function hasArticleId( WikiPage $wikiPage ): bool {
+		$metadata = self::getPageMetadata($wikiPage);
+		return isset($metadata->articleId);
 	}
 
 	public static function getArticleId( WikiPage $wikiPage ): string {
