@@ -19,16 +19,48 @@
 
 namespace MediaWiki\Extension\Lakat;
 
+use CommentStoreComment;
+use ContentHandler;
+use Exception;
+use JsonContent;
+use LogicException;
+use MediaWiki\EditPage\EditPage;
+use MediaWiki\Extension\Lakat\Storage\LakatStorageStub;
 use MediaWiki\Hook\BeforePageDisplayHook;
+use MediaWiki\Hook\MediaWikiServicesHook;
 use MediaWiki\Hook\SkinTemplateNavigation__UniversalHook;
+use MediaWiki\Language\RawMessage;
+use MediaWiki\MediaWikiServices;
+use MediaWiki\Revision\RenderedRevision;
+use MediaWiki\Revision\RevisionRecord;
+use MediaWiki\Revision\SlotRecord;
+use MediaWiki\Revision\SlotRoleRegistry;
+use MediaWiki\Settings\Source\Format\JsonFormat;
+use MediaWiki\Storage\EditResult;
+use MediaWiki\Storage\Hook\PageSaveCompleteHook;
+use MediaWiki\Storage\PageUpdater;
 use MediaWiki\Title\Title;
+use MediaWiki\User\UserIdentity;
 use SkinTemplate;
 use User;
+use Status;
+use WikiPage;
 
 class Hooks implements
+	MediaWikiServicesHook,
 	BeforePageDisplayHook,
-	SkinTemplateNavigation__UniversalHook
+	SkinTemplateNavigation__UniversalHook,
+	PageSaveCompleteHook
 {
+	public function onMediaWikiServices( $services ): void {
+		$services->addServiceManipulator(
+			'SlotRoleRegistry',
+			function (
+				SlotRoleRegistry $registry
+			) {
+				$registry->defineRoleWithModel( 'lakat', CONTENT_MODEL_JSON );
+			});
+	}
 
 	/**
 	 * @see https://www.mediawiki.org/wiki/Manual:Hooks/BeforePageDisplay
@@ -124,5 +156,27 @@ class Hooks implements
 			'type' => 'text',
 			'label-message' => 'lakat-default-branch',
 		];
+	}
+
+	public function onPageSaveComplete( $wikiPage, $user, $summary, $flags, $revisionRecord, $editResult ): void {
+		// Article is a subpage of a branch page
+		$title = $wikiPage->getTitle();
+		if ($title->isSubpage()) {
+			$branchId = LakatArticleMetadata::getBranchId($title->getRootText());
+
+			// Save page in remote storage
+			$blob = $revisionRecord->getContent(SlotRecord::MAIN)->serialize();
+			if ($editResult->isNew()) {
+				// create article on remote storage
+				$articleId = LakatStorageStub::getInstance()->submitFirst($branchId, $blob);
+				// save article id in page metadata
+				LakatArticleMetadata::saveArticleId($wikiPage, $user, $articleId);
+			} else {
+				// get articleId from page metadata
+				$articleId = LakatArticleMetadata::getArticleId($wikiPage);
+				// update article on remote storage
+				LakatStorageStub::getInstance()->submitNext($branchId, $articleId, $blob);
+			}
+		}
 	}
 }

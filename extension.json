@@ -25,19 +25,24 @@
 	},
 	"HookHandlers": {
 		"LakatHooks": {
-			"class": "MediaWiki\\Extension\\Lakat\\Hooks",
-			"services": []
+			"class": "MediaWiki\\Extension\\Lakat\\Hooks"
 		}
 	},
 	"Hooks": {
+		"MediaWikiServices": "LakatHooks",
 		"BeforePageDisplay": "LakatHooks",
 		"SkinTemplateNavigation::Universal": "LakatHooks",
-		"GetPreferences": "LakatHooks"
+		"GetPreferences": "LakatHooks",
+		"PageSaveComplete": "LakatHooks"
+	},
+	"Actions": {
+		"view": "MediaWiki\\Extension\\Lakat\\LakatViewAction"
 	},
 	"ContentHandlers": {
 		"lakat": "MediaWiki\\Extension\\Lakat\\LakatContentHandler"
 	},
 	"SpecialPages": {
+		"Branches": "MediaWiki\\Extension\\Lakat\\SpecialBranches",
 		"CreateBranch": "MediaWiki\\Extension\\Lakat\\SpecialCreateBranch"
 	},
 	"ExtensionMessagesFiles": {
