@@ -19,6 +19,10 @@
 	"lakat-token-tooltip": "Enter your token",
 	"lakat-social": "Social",
 	"lakat-social-tooltip": "Share the current page",
+
+	"specialpages-group-lakat": "Lakat",
+	"branches": "Branches",
+	"branches-summary": "List of remote branches",
 	"createbranch": "Create Branch",
 	"createbranch-name": "Branch name",
 	"createbranch-token": "Token",
@@ -27,5 +31,6 @@
 	"createbranch-allow-conflicts": "Allow conflicts",
 	"createbranch-error-already-exists": "Branch with the same name already exists",
 	"createbranch-error-invalid-name": "Branch name is invalid",
+	"createbranch-error-remote": "Failed to create remote branch",
 	"createbranch-revision-comment": "Initial revision"
 }

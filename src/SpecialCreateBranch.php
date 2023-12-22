@@ -4,19 +4,25 @@ namespace MediaWiki\Extension\Lakat;
 
 use CommentStoreComment;
 use ContentHandler;
+use Exception;
+use FormatJson;
 use FormSpecialPage;
+use LogicException;
+use MediaWiki\Extension\Lakat\Storage\LakatStorageStub;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\SlotRecord;
 use Status;
 use Title;
 
-class SpecialCreateBranch extends FormSpecialPage
-{
-	private Title $createdPageTitle;
+class SpecialCreateBranch extends FormSpecialPage {
+	private Title $branchPageTitle;
 
-	public function __construct()
-	{
-		parent::__construct('CreateBranch');
+	public function __construct() {
+		parent::__construct( 'CreateBranch' );
+	}
+
+	protected function getGroupName() {
+		return 'lakat';
 	}
 
 	protected function getDisplayFormat() {
@@ -52,40 +58,47 @@ class SpecialCreateBranch extends FormSpecialPage
 		return $formDescriptor;
 	}
 
-	public function onSubmit(array $data) {
-		$this->createdPageTitle = Title::newFromText($data[ 'BranchName' ]);
+	public function onSubmit( array $data ) {
+		$branchName = $data['BranchName'];
 
-		$text = "Create branch request parameters:\n";
-		foreach ($data as $key => $val) {
-			$text .= "* $key: $val\n";
-		}
-
-		return $this->createPage($this->createdPageTitle, $text);
-	}
-
-	private function createPage(Title $title, string $wikitext = '') {
+		$title = Title::newFromText( $branchName );
 		if ( $title->isKnown() ) {
 			return Status::newFatal( 'createbranch-error-already-exists' );
 		}
 		if ( !$title->canExist() ) {
 			return Status::newFatal( 'createbranch-error-invalid-name' );
 		}
+		$this->branchPageTitle = $title;
 
+		// create branch remotely
+		try {
+			$branchId = LakatStorageStub::getInstance()->createBranch( $branchName, $data );
+		} catch ( Exception $e ) {
+			return Status::newFatal( 'createbranch-error-remote' );
+		}
+
+		// create branch root page
 		$page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $title );
-		$text = ContentHandler::makeContent( $wikitext, null, LakatContent::MODEL_ID);
+
+		$json = FormatJson::encode( [ 'BranchId' => $branchId ] + $data );
+		$content = ContentHandler::makeContent( $json, $title, CONTENT_MODEL_JSON );
+		if ( !$content->isValid() ) {
+			throw new LogicException( 'Json parsing failed' );
+		}
+
 		$comment = CommentStoreComment::newUnsavedComment(
 			wfMessage( 'createbranch-revision-comment' )->inContentLanguage()->text()
 		);
 
 		$page->newPageUpdater( $this->getUser() )
-			->setContent( SlotRecord::MAIN, $text )
+			->setContent( SlotRecord::MAIN, ContentHandler::makeContent('Branch root page', $title) )
+			->setContent( 'lakat', $content )
 			->saveRevision( $comment );
 
 		return Status::newGood();
 	}
 
-	public function onSuccess()
-	{
-		$this->getOutput()->redirect( $this->createdPageTitle->getLocalURL());
+	public function onSuccess() {
+		$this->getOutput()->redirect( $this->branchPageTitle->getLocalURL() );
 	}
 }
