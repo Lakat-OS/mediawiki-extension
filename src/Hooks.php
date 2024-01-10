@@ -202,11 +202,11 @@ class Hooks implements
 		if ($title->isSubpage()) {
 			$branchId = LakatArticleMetadata::getBranchId($title->getRootText());
 
-			// Save page in remote storage
+			// Save page in remote storage if necessary
 			$blob = $revisionRecord->getContent(SlotRecord::MAIN)->serialize();
-			if ($editResult->isNew()) {
+			if ($editResult->isNew() && !LakatArticleMetadata::hasArticleId($wikiPage)) {
 				// create article on remote storage
-				$articleId = LakatStorageStub::getInstance()->submitFirst($branchId, $blob);
+				$articleId = LakatStorageStub::getInstance()->submitFirst($branchId, $title->getSubpageText(), $blob);
 				// save article id in page metadata
 				LakatArticleMetadata::saveArticleId($wikiPage, $user, $articleId);
 			} else {
