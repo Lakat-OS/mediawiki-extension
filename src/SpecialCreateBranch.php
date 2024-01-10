@@ -61,6 +61,8 @@ class SpecialCreateBranch extends FormSpecialPage {
 	public function onSubmit( array $data ) {
 		$branchName = $data['BranchName'];
 
+		$this->setDefaultBranch( $branchName );
+
 		$title = Title::newFromText( $branchName );
 		if ( $title->isKnown() ) {
 			return Status::newFatal( 'createbranch-error-already-exists' );
@@ -96,6 +98,13 @@ class SpecialCreateBranch extends FormSpecialPage {
 			->saveRevision( $comment );
 
 		return Status::newGood();
+	}
+
+	private function setDefaultBranch( string $branchName ): void {
+		$user = $this->getUser();
+		$userOptionsManager = MediaWikiServices::getInstance()->getUserOptionsManager();
+		$userOptionsManager->setOption( $user, 'lakat-default-branch', $branchName );
+		$userOptionsManager->saveOptions( $user );
 	}
 
 	public function onSuccess() {

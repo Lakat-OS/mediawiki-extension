@@ -32,6 +32,7 @@
 		"MediaWikiServices": "LakatHooks",
 		"BeforePageDisplay": "LakatHooks",
 		"SkinTemplateNavigation::Universal": "LakatHooks",
+		"GetPreferences": "LakatHooks",
 		"PageSaveComplete": "LakatHooks"
 	},
 	"Actions": {

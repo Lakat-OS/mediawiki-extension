@@ -33,5 +33,8 @@
 	"createbranch-error-invalid-name": "Branch name is invalid",
 	"createbranch-error-remote": "Failed to create remote branch",
 	"createbranch-revision-comment": "Lakat: New branch created",
-	"fetcharticle-revision-comment": "Lakat: Article copied from remote storage"
+	"fetcharticle-revision-comment": "Lakat: Article copied from remote storage",
+	"prefs-lakat": "Lakat",
+	"prefs-options": "Options",
+	"lakat-default-branch": "Default branch"
 }
