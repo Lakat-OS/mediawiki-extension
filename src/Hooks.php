@@ -19,6 +19,7 @@
 
 namespace MediaWiki\Extension\Lakat;
 
+use Article;
 use CommentStoreComment;
 use ContentHandler;
 use Exception;
@@ -142,6 +143,43 @@ class Hooks implements
 				'title' => $sktemplate->msg( 'lakat-token-tooltip' )->text(),
 			]
 		];
+	}
+
+	/**
+	 * This hook resolves branch for a new article and redirects to Branch/Title edit page
+	 */
+	public static function onCustomEditor( Article $article, User $user ): bool {
+		// ignore existing articles
+		if ($article->getTitle()->exists()) {
+			return true;
+		}
+
+		// redirect new article to current branch if not yet
+		$titleText = $article->getTitle()->getText();
+		$branchName = self::getCurrentBranch();
+		if ( !str_starts_with( $titleText, $branchName . '/') ) {
+			$redirectTo = 'Special:EditPage/' . $branchName . '/' . $titleText;
+			$article->getContext()->getOutput()->redirect( Title::newFromText($redirectTo)->getLocalURL() );
+			return false;
+		}
+
+		// new article already in branch, do nothing
+		return true;
+	}
+
+	/**
+	 * This hook sets 'lakat' content model as default for any subpage in Branch/
+	 */
+	public static function onContentHandlerDefaultModelFor( Title $title, ?string &$model ): bool {
+		if ( str_starts_with( $title->getText(), self::getCurrentBranch() . '/') ) {
+			$model = LakatContent::MODEL_ID;
+		}
+		return true;
+	}
+
+	public static function getCurrentBranch(): string {
+		// TODO: replace this stub
+		return 'BranchX';
 	}
 
 	/**
