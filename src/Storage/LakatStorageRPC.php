@@ -64,7 +64,7 @@ class LakatStorageRPC implements LakatStorageInterface
 		throw new \LogicException('Not implemented');
     }
 
-    public function submitFirst(string $branchId, string $content): string
+	public function submitFirst(string $branchId, string $articleName, string $content): string
     {
 		throw new \LogicException('Not implemented');
     }
@@ -78,6 +78,11 @@ class LakatStorageRPC implements LakatStorageInterface
     {
 		throw new \LogicException('Not implemented');
     }
+
+	public function findArticleIdByName(string $branchId, string $articleName): ?string
+	{
+		throw new \LogicException('Not implemented');
+	}
 
 	private function rpc( string $method, array $params )
 	{
