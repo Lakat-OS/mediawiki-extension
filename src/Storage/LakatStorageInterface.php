@@ -3,7 +3,7 @@
 namespace MediaWiki\Extension\Lakat\Storage;
 
 interface LakatStorageInterface {
-	public function createBranch(string $name, array $options): string;
+	public function createGenesisBranch(string $name, array $options): string;
 
 	public function branches(): array;
 

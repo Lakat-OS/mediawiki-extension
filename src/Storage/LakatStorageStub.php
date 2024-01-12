@@ -15,7 +15,7 @@ class LakatStorageStub implements LakatStorageInterface {
 		return self::$instance;
 	}
 
-	public function createBranch( string $name, array $options ): string {
+	public function createGenesisBranch( string $name, array $options ): string {
 		$branchId = 'branch_' . $this->getSlug( $name );
 
 		// create directory for this branch
