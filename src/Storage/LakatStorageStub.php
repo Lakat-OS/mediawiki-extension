@@ -61,13 +61,15 @@ class LakatStorageStub implements LakatStorageInterface {
 		return $branches;
 	}
 
-	public function submitFirst( string $branchId, string $content ): string {
+	public function submitFirst( string $branchId, string $articleName, string $content ): string {
 		$articleId = uniqid( 'article_' );
 
 		$filename = $this->getArticleFile( $branchId, $articleId );
 		if ( !file_put_contents( $filename, $content ) ) {
 			throw new Exception( 'Failed to write article to file ' . $filename );
 		}
+
+		$this->saveArticleName2Id( $branchId, $articleName, $articleId );
 
 		return $articleId;
 	}
@@ -89,6 +91,29 @@ class LakatStorageStub implements LakatStorageInterface {
 		return $content;
 	}
 
+	public function findArticleIdByName( string $branchId, string $articleName ): ?string {
+		$filename = $this->getArticleName2IdFile( $branchId );
+		$name2id = file_exists( $filename ) ? json_decode(
+			file_get_contents( $filename ),
+			true,
+			512,
+			JSON_THROW_ON_ERROR
+		) : [];
+		return $name2id[$articleName] ?? null;
+	}
+
+	private function saveArticleName2Id( string $branchId, string $articleName, string $articleId ): void {
+		$filename = $this->getArticleName2IdFile( $branchId );
+		$name2id = file_exists( $filename ) ? json_decode(
+			file_get_contents( $filename ),
+			true,
+			512,
+			JSON_THROW_ON_ERROR
+		) : [];
+		$name2id[$articleName] = $articleId;
+		file_put_contents($filename, json_encode($name2id));
+	}
+
 	private function getSlug( string $name ) {
 		return preg_replace( '/[^a-z0-9]/', '_', strtolower( trim( $name ) ) );
 	}
@@ -103,5 +128,9 @@ class LakatStorageStub implements LakatStorageInterface {
 
 	private function getArticleFile( string $branchId, string $articleId ): string {
 		return $this->getBranchDir( $branchId ) . '/' . $articleId;
+	}
+
+	private function getArticleName2IdFile( string $branchId ): string {
+		return $this->getBranchDir( $branchId ) . '/.article_name2id';
 	}
 }

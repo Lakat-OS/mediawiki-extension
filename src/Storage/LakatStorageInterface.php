@@ -13,9 +13,11 @@ interface LakatStorageInterface {
 
 	public function branches(): array;
 
-	public function submitFirst(string $branchId, string $content): string;
+	public function submitFirst(string $branchId, string $articleName, string $content): string;
 
 	public function submitNext(string $branchId, string $articleId, string $content): void;
 
 	public function fetchArticle(string $branchId, string $articleId): string;
+
+	public function findArticleIdByName(string $branchId, string $articleName): ?string;
 }
