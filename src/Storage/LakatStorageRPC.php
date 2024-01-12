@@ -15,7 +15,7 @@ class LakatStorageRPC implements LakatStorageInterface
 
 	private static LakatStorageRPC $instance;
 
-	private string $url = 'http://rpc-server:3355/';	// TODO: move to extension config
+	private string $url;
 
 	private GlobalIdGenerator $globalIdGenerator;
 	private HttpRequestFactory $httpRequestFactory;
@@ -31,6 +31,10 @@ class LakatStorageRPC implements LakatStorageInterface
 	public function __construct()
 	{
 		$this->setLogger(LoggerFactory::getInstance('lakat-rpc'));
+
+		$config = MediaWikiServices::getInstance()->getConfigFactory()->makeConfig( 'lakat' );
+		$this->url = $config->get( 'LakatRpcUrl' );
+
 		$this->globalIdGenerator = MediaWikiServices::getInstance()->getGlobalIdGenerator();
 		$this->httpRequestFactory = MediaWikiServices::getInstance()->getHttpRequestFactory();
 	}

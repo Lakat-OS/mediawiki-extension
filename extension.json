@@ -21,7 +21,14 @@
 		"LakatVandalizeEachPage": {
 			"description": "Write 'Lakat was here' on each page",
 			"value": false
+		},
+		"LakatRpcUrl": {
+			"description": "URL of Lakat RPC storage for branches and articles",
+			"value": "http://rpc-server:3355/"
 		}
+	},
+	"ConfigRegistry": {
+		"lakat": "GlobalVarConfig::newInstance"
 	},
 	"HookHandlers": {
 		"LakatHooks": {
