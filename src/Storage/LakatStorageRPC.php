@@ -13,10 +13,6 @@ class LakatStorageRPC implements LakatStorageInterface
 {
 	use LoggerAwareTrait;
 
-	public const BRANCH_TYPE_PROPER = 0;
-	public const BRANCH_TYPE_TWIG = 1;
-	public const BRANCH_TYPE_SPROUT = 2;
-
 	private static LakatStorageRPC $instance;
 
 	private string $url = 'http://rpc-server:3355/';	// TODO: move to extension config
@@ -39,20 +35,21 @@ class LakatStorageRPC implements LakatStorageInterface
 		$this->httpRequestFactory = MediaWikiServices::getInstance()->getHttpRequestFactory();
 	}
 
-	public function createGenesisBranch( string $name, array $options ): string
+	public function createGenesisBranch(
+		int $branchType,
+		string $name,
+		string $signature,
+		bool $acceptConflicts,
+		string $msg
+	): string
     {
-		// TODO: these should be parameters
-		$signature = '';
-		$acceptConflicts = false;
-		$message = 'Genesis Submit';
-
 		$method = 'create_genesis_branch';
 		$params = [
-			'branch_type' => self::BRANCH_TYPE_TWIG,
+			'branch_type' => $branchType,
 			'name' => $name,
 			'signature' => base64_encode( $signature ),
 			'accept_conflicts' => $acceptConflicts,
-			'msg' => $message,
+			'msg' => $msg,
 		];
 
 		return $this->rpc($method, array_values($params));
