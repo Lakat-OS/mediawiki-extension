@@ -1,10 +1,13 @@
 <?php
 
+namespace MediaWiki\Extension\Lakat\Tests\Integration\Storage;
+
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Extension\Lakat\Domain\BranchType;
 use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
 use MediaWiki\Http\HttpRequestFactory;
 use MediaWiki\MediaWikiServices;
+use MediaWikiIntegrationTestCase;
 use Psr\Log\NullLogger;
 
 /**
