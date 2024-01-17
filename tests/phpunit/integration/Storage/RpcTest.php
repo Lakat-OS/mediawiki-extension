@@ -35,13 +35,30 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * @covers ::createGenesisBranch
 	 */
-	public function testCreateGenesisBranch() : void {
+	public function testCreateGenesisBranch() : array {
 		$branchType = BranchType::TWIG;
-		$name = 'Test branch';
+		$branchName = 'Test branch '.microtime(true);
 		$signature = "\x00\x10\x20\x30";
 		$acceptConflicts = true;
 		$msg = 'Create genesis test branch';
-		$branchId = LakatStorageRPC::getInstance()->createGenesisBranch( $branchType, $name, $signature, $acceptConflicts, $msg );
+
+		$branchId = LakatStorageRPC::getInstance()->createGenesisBranch( $branchType, $branchName, $signature, $acceptConflicts, $msg );
+
 		$this->assertNotEmpty($branchId);
+
+		return compact('branchId', 'branchName');
+	}
+
+	/**
+	 * @covers ::getBranchNameFromBranchId
+	 *
+	 * @depends testCreateGenesisBranch
+	 */
+	public function testGetBranchNameFromBranchId( array $branchData ) {
+		extract($branchData);
+
+		$resultBranchName = LakatStorageRPC::getInstance()->getBranchNameFromBranchId($branchId);
+
+		$this->assertEquals($branchName, $resultBranchName);
 	}
 }

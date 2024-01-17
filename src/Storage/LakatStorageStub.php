@@ -44,6 +44,11 @@ class LakatStorageStub implements LakatStorageInterface {
 		return $branchId;
 	}
 
+	public function getBranchNameFromBranchId(string $branchId): string
+	{
+		throw new \LogicException('Not implemented');
+	}
+
 	public function branches(): array {
 		$branches = [];
 		foreach ( glob( $this->getBasePath() . '/branch_*' ) as $dir ) {

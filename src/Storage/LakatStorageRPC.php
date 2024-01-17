@@ -42,14 +42,21 @@ class LakatStorageRPC implements LakatStorageInterface {
 	public function createGenesisBranch( int $branchType, string $name, string $signature, bool $acceptConflicts, string $msg ) : string {
 		$method = 'create_genesis_branch';
 		$params = [
-			'branch_type' => $branchType,
-			'name' => $name,
-			'signature' => base64_encode( $signature ),
-			'accept_conflicts' => $acceptConflicts,
-			'msg' => $msg,
+			$branchType,
+			$name,
+			base64_encode( $signature ),
+			$acceptConflicts,
+			$msg,
 		];
 
-		return $this->rpc( $method, array_values( $params ) );
+		return $this->rpc( $method, $params );
+	}
+
+	public function getBranchNameFromBranchId(string $branchId): string
+	{
+		$method = 'get_branch_name_from_branch_id';
+		$params = [$branchId];
+		return $this->rpc( $method, $params );
 	}
 
 	public function branches() : array {
@@ -72,13 +79,16 @@ class LakatStorageRPC implements LakatStorageInterface {
 		throw new LogicException( 'Not implemented' );
 	}
 
-	private function rpc( string $method, array $params ) {
+	private function rpc( string $method, array $params = [] ) {
 		$data = [
 			'jsonrpc' => '2.0',
 			'id' => $this->globalIdGenerator->newRawUUIDv4(),
 			'method' => $method,
-			'params' => $params,
 		];
+		if ($params) {
+			$data['params'] = $params;
+		}
+
 		$options = [
 			'method' => 'POST',
 			'postData' => json_encode( $data ),
