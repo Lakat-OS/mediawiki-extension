@@ -79,6 +79,10 @@ class LakatStorageStub implements LakatStorageInterface {
 		return $articleId;
 	}
 
+	public function submitContentToTwig( string $branchId, array $contents, string $publicKey, string $proof, string $msg ) : string {
+		throw new \LogicException('Not implemented');
+	}
+
 	public function submitNext( string $branchId, string $articleId, string $content ): void {
 		$filename = $this->getArticleFile( $branchId, $articleId );
 		if ( !file_put_contents( $filename, $content ) ) {

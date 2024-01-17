@@ -4,6 +4,8 @@ namespace MediaWiki\Extension\Lakat\Tests\Integration\Storage;
 
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Extension\Lakat\Domain\BranchType;
+use MediaWiki\Extension\Lakat\Domain\BucketIdType;
+use MediaWiki\Extension\Lakat\Domain\BucketSchema;
 use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
 use MediaWiki\Http\HttpRequestFactory;
 use MediaWiki\MediaWikiServices;
@@ -15,6 +17,8 @@ use Psr\Log\NullLogger;
  * @coversDefaultClass LakatStorageRPC
  */
 class RpcTest extends MediaWikiIntegrationTestCase {
+	private LakatStorageRPC $rpc;
+
 	protected function setUp() : void {
 		parent::setUp();
 
@@ -30,6 +34,8 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 				);
 			}
 		);
+
+		$this->rpc = LakatStorageRPC::getInstance();
 	}
 
 	/**
@@ -42,7 +48,7 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 		$acceptConflicts = true;
 		$msg = 'Create genesis test branch';
 
-		$branchId = LakatStorageRPC::getInstance()->createGenesisBranch( $branchType, $branchName, $signature, $acceptConflicts, $msg );
+		$branchId = $this->rpc->createGenesisBranch( $branchType, $branchName, $signature, $acceptConflicts, $msg );
 
 		$this->assertNotEmpty($branchId);
 
@@ -55,10 +61,57 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 	 * @depends testCreateGenesisBranch
 	 */
 	public function testGetBranchNameFromBranchId( array $branchData ) {
-		extract($branchData);
+		$branchId = $branchData['branchId'];
+		$branchName = $branchData['branchName'];
 
-		$resultBranchName = LakatStorageRPC::getInstance()->getBranchNameFromBranchId($branchId);
+		$retrievedBranchName = $this->rpc->getBranchNameFromBranchId($branchId);
 
-		$this->assertEquals($branchName, $resultBranchName);
+		$this->assertEquals($branchName, $retrievedBranchName);
+	}
+
+	/**
+	 * @covers ::submitContentToTwig
+	 *
+	 * @depends testCreateGenesisBranch
+	 */
+	public function testSubmitContentToTwig( array $branchData ) {
+		$branchId = $branchData['branchId'];
+
+		$contents = [
+			[
+				"data" => "First bucket data " . microtime(true),
+				"schema" => BucketSchema::DEFAULT_ATOMIC,
+				"parent_id" => base64_encode(''),
+				"signature" => base64_encode("\x00"),
+				"refs" => []
+			],
+			[
+				"data" => "Second bucket data " . microtime(true),
+				"schema" => BucketSchema::DEFAULT_ATOMIC,
+				"parent_id" => base64_encode(''),
+				"signature" => base64_encode("\x00"),
+				"refs" => []
+			],
+			[
+				"data" => [
+					"order" => [
+						["id" => 0, "type" => BucketIdType::NO_REF],
+						["id" => 1, "type" => BucketIdType::NO_REF]],
+					"name" => "Article Name " . microtime(true)
+				],
+				"schema" => BucketSchema::DEFAULT_MOLECULAR,
+				"parent_id" => base64_encode(''),
+				"signature" => base64_encode("\x00"),
+				"refs" => []
+			]
+		];
+
+		$publicKey = base64_encode(random_bytes(10));
+		$proof = base64_encode(random_bytes(10));
+		$msg = 'submit content ' . microtime(true);
+
+		$branchHeadId = $this->rpc->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
+
+		$this->assertNotEmpty($branchHeadId);
 	}
 }

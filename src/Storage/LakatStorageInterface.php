@@ -60,7 +60,8 @@ interface LakatStorageInterface {
 	 *
 	 * @return string Branch head id
 	 */
-//	public function submitContentToTwig(string $branchId, string $contents, string $publicKey, string $proof, string $msg): string;
+	public function submitContentToTwig(string $branchId, array $contents, string $publicKey, string $proof, string $msg): string;
+
 	public function submitFirst(string $branchId, string $articleName, string $content): string;
 	public function submitNext(string $branchId, string $articleId, string $content): void;
 
