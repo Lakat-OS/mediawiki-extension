@@ -172,6 +172,11 @@ class Hooks implements
 	}
 
 	public function onPageSaveComplete( $wikiPage, $user, $summary, $flags, $revisionRecord, $editResult ): void {
+		// skip internal edits to avoid infinite loop when saving metadata
+		if ($flags & EDIT_INTERNAL) {
+			return;
+		}
+
 		// Article is a subpage of a branch page
 		$title = $wikiPage->getTitle();
 		if ($title->isSubpage()) {
@@ -206,26 +211,40 @@ class Hooks implements
 				$proof = '';
 				$msg = $summary;
 				$submitData = LakatStorageRPC::getInstance()->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
-				// save article id in page metadata
+				// save page metadata
 				LakatArticleMetadata::save( $wikiPage, $user, $submitData );
 			} else {
 				// get article bucket id from page metadata
 				$submitData = LakatArticleMetadata::load( $wikiPage );
-				$bucketId = $submitData['bucket_refs'][0];
+				$bucketRefs = $submitData['bucket_refs'];
 				// update article on remote storage
 				$contents = [
 					[
 						"data" => $blob,
 						"schema" => BucketSchema::DEFAULT_ATOMIC,
-						"parent_id" => $bucketId,
-						"signature" => base64_encode(''),
+						"parent_id" => $bucketRefs[0],
+						"signature" => base64_encode( '' ),
+						"refs" => []
+					],
+					[
+						"data" => [
+							"order" => [
+								[ "id" => 0, "type" => BucketIdType::NO_REF ]
+							],
+							"name" => $title->getSubpageText()
+						],
+						"schema" => BucketSchema::DEFAULT_MOLECULAR,
+						"parent_id" => $bucketRefs[1],
+						"signature" => base64_encode( '' ),
 						"refs" => []
 					]
 				];
 				$publicKey = '';
 				$proof = '';
 				$msg = $summary;
-				LakatStorageRPC::getInstance()->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
+				$submitData = LakatStorageRPC::getInstance()->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
+				// update page metadata
+				LakatArticleMetadata::save( $wikiPage, $user, $submitData );
 			}
 		}
 	}
