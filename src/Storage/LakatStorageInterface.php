@@ -87,12 +87,11 @@ interface LakatStorageInterface {
 	 */
 	public function submitContentToTwig(string $branchId, array $contents, string $publicKey, string $proof, string $msg): array;
 
-	public function submitFirst(string $branchId, string $articleName, string $content): string;
-	public function submitNext(string $branchId, string $articleId, string $content): void;
-
+	/**
+	 * @param string $branchId
+	 * @param string $name
+	 *
+	 * @return string Article content as all article buckets concatenated.
+	 */
 	public function getArticleFromArticleName(string $branchId, string $name): string;
-
-	public function fetchArticle(string $branchId, string $articleId): string;
-
-	public function findArticleIdByName(string $branchId, string $articleName): ?string;
 }

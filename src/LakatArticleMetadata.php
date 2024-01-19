@@ -7,10 +7,7 @@ use ContentHandler;
 use Exception;
 use FormatJson;
 use JsonContent;
-use MediaWiki\Language\RawMessage;
 use MediaWiki\MediaWikiServices;
-use MediaWiki\Permissions\Authority;
-use MediaWiki\Revision\RevisionRecord;
 use MediaWiki\Title\Title;
 use MediaWiki\User\UserIdentity;
 use WikiPage;
@@ -28,9 +25,9 @@ class LakatArticleMetadata {
 		return $metadata->BranchId;
 	}
 
-	public static function saveArticleId( WikiPage $wikiPage, UserIdentity $user, string $articleId): void
+	public static function save( WikiPage $wikiPage, UserIdentity $user, array $data): void
 	{
-		$articleMetadataContent = ContentHandler::makeContent( FormatJson::encode(compact('articleId')), null, CONTENT_MODEL_JSON);
+		$articleMetadataContent = ContentHandler::makeContent( FormatJson::encode($data), null, CONTENT_MODEL_JSON);
 		$pageUpdater = $wikiPage->newPageUpdater( $user );
 		$pageUpdater->setContent('lakat', $articleMetadataContent);
 		$pageUpdater->saveRevision(CommentStoreComment::newUnsavedComment('Lakat: added article metadata'), EDIT_SUPPRESS_RC);
@@ -41,7 +38,7 @@ class LakatArticleMetadata {
 		return isset($metadata->articleId);
 	}
 
-	public static function getArticleId( WikiPage $wikiPage ): string {
+	public static function load( WikiPage $wikiPage ): array {
 		$metadata = self::getPageMetadata($wikiPage);
 		if (!isset($metadata->articleId)) {
 			throw new Exception('Article has invalid metadata: articleId field is not set');

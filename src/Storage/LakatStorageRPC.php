@@ -90,14 +90,6 @@ class LakatStorageRPC implements LakatStorageInterface {
 		return $this->rpc($method, $params);
 	}
 
-	public function fetchArticle( string $branchId, string $articleId ) : string {
-		throw new LogicException( 'Not implemented' );
-	}
-
-	public function findArticleIdByName( string $branchId, string $articleName ) : ?string {
-		throw new LogicException( 'Not implemented' );
-	}
-
 	private function rpc( string $method, array $params = [] ) {
 		$data = [
 			'jsonrpc' => '2.0',
