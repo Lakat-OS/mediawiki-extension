@@ -61,7 +61,7 @@ class LakatStorageRPC implements LakatStorageInterface {
 		throw new LogicException( 'Not implemented' );
 	}
 
-	public function submitContentToTwig( string $branchId, array $contents, string $publicKey, string $proof, string $msg ) : string {
+	public function submitContentToTwig( string $branchId, array $contents, string $publicKey, string $proof, string $msg ) : array {
 		$method = $this->camelToSnakeCase( __FUNCTION__ );
 		$params = [
 			$branchId,
@@ -79,6 +79,15 @@ class LakatStorageRPC implements LakatStorageInterface {
 
 	public function submitNext( string $branchId, string $articleId, string $content ) : void {
 		throw new LogicException( 'Not implemented' );
+	}
+
+	public function getArticleFromArticleName( string $branchId, string $name ): string {
+		$method = $this->camelToSnakeCase( __FUNCTION__ );
+		$params = [
+			$branchId,
+			$name
+		];
+		return $this->rpc($method, $params);
 	}
 
 	public function fetchArticle( string $branchId, string $articleId ) : string {

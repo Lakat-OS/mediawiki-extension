@@ -22,12 +22,11 @@ interface LakatStorageInterface {
 
 	public function branches(): array;
 
-	//submit_content_to_twig(branch_id: str, contents: any, public_key: str, proof: str, msg: str)
-
 	/**
 	 * @param string $branchId
-	 * @param string $contents
-	 * contents = [
+	 * @param array $contents Array of buckets to submit. Example:
+	 * <pre>
+	 * [
 	 *     {
 	 *         "data": "Hello",
 	 *         "schema": DEFAULT_ATOMIC_BUCKET_SCHEMA,
@@ -52,18 +51,46 @@ interface LakatStorageInterface {
 	 *         "parent_id": encode_bytes_to_base64_str(bytes(0)),
 	 *         "signature": encode_bytes_to_base64_str(bytes(1)),
 	 *         "refs": []
-     *     }
+	 *     }
 	 * ]
+	 * </pre>
 	 * @param string $publicKey
 	 * @param string $proof
 	 * @param string $msg
 	 *
-	 * @return string Branch head id
+	 * @return array Submit info. Example:
+	 * <pre>
+	 * {
+	 *   "branch_id": "AVESCNlMjwzVG7QB",
+	 *   "bucket_refs": [
+	 *     "AVESCKfMU7ZqHW5OAQ==",
+	 *     "AVESCAEje3RqTDDCAQ==",
+	 *     "AVESCJG6DxbpGP2rAg==",
+	 *     "AVESCMNhd4mD1duZAQ==",
+	 *     "AVESCE3iK7qOVkGIAg=="
+	 *   ],
+	 *   "registered_names": [
+	 *     {
+	 *       "name": "Dummy Article Name",
+	 *       "id": "AVESCJG6DxbpGP2rAg=="
+	 *     },
+	 *     {
+	 *       "name": "Another Article Name",
+	 *       "id": "AVESCE3iK7qOVkGIAg=="
+	 *     }
+	 *   ],
+	 *   "submit_trace_id": "AVESCItDYk9OywOwDgY0VtEAAAA=",
+	 *   "submit_id": "AVESCJMDCAnR63TBDQY0VtEAAAA=",
+	 *   "branch_state_id": "AVESCNKdydLjwoCv"
+	 * }
+	 * </pre>
 	 */
-	public function submitContentToTwig(string $branchId, array $contents, string $publicKey, string $proof, string $msg): string;
+	public function submitContentToTwig(string $branchId, array $contents, string $publicKey, string $proof, string $msg): array;
 
 	public function submitFirst(string $branchId, string $articleName, string $content): string;
 	public function submitNext(string $branchId, string $articleId, string $content): void;
+
+	public function getArticleFromArticleName(string $branchId, string $name): string;
 
 	public function fetchArticle(string $branchId, string $articleId): string;
 

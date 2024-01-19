@@ -79,7 +79,7 @@ class LakatStorageStub implements LakatStorageInterface {
 		return $articleId;
 	}
 
-	public function submitContentToTwig( string $branchId, array $contents, string $publicKey, string $proof, string $msg ) : string {
+	public function submitContentToTwig( string $branchId, array $contents, string $publicKey, string $proof, string $msg ) : array {
 		throw new \LogicException('Not implemented');
 	}
 
@@ -133,6 +133,11 @@ class LakatStorageStub implements LakatStorageInterface {
 
 	private function getBranchDir( string $branchId ): string {
 		return $this->getBasePath() . '/' . $branchId;
+	}
+
+	public function getArticleFromArticleName(string $branchId, string $name): string
+	{
+		throw new \LogicException('Not implemented');
 	}
 
 	private function getArticleFile( string $branchId, string $articleId ): string {

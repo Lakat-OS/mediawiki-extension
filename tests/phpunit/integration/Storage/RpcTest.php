@@ -77,16 +77,19 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 	public function testSubmitContentToTwig( array $branchData ) {
 		$branchId = $branchData['branchId'];
 
+		$articleName = "Article Name " . microtime(true);
+		$articlePart1 = "First bucket data " . microtime(true);
+		$articlePart2 = "Second bucket data " . microtime( true );
 		$contents = [
 			[
-				"data" => "First bucket data " . microtime(true),
+				"data" => $articlePart1,
 				"schema" => BucketSchema::DEFAULT_ATOMIC,
 				"parent_id" => base64_encode(''),
 				"signature" => base64_encode("\x00"),
 				"refs" => []
 			],
 			[
-				"data" => "Second bucket data " . microtime(true),
+				"data" => $articlePart2,
 				"schema" => BucketSchema::DEFAULT_ATOMIC,
 				"parent_id" => base64_encode(''),
 				"signature" => base64_encode("\x00"),
@@ -97,7 +100,7 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 					"order" => [
 						["id" => 0, "type" => BucketIdType::NO_REF],
 						["id" => 1, "type" => BucketIdType::NO_REF]],
-					"name" => "Article Name " . microtime(true)
+					"name" => $articleName
 				],
 				"schema" => BucketSchema::DEFAULT_MOLECULAR,
 				"parent_id" => base64_encode(''),
@@ -110,8 +113,30 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 		$proof = base64_encode(random_bytes(10));
 		$msg = 'submit content ' . microtime(true);
 
-		$branchHeadId = $this->rpc->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
+		$submitData = $this->rpc->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
 
-		$this->assertNotEmpty($branchHeadId);
+		$this->assertNotEmpty( $submitData );
+		$this->assertIsArray( $submitData );
+		$this->assertEquals( $branchId, $submitData['branch_id'] );
+		$this->assertCount( 3, $submitData['bucket_refs'] );
+		$this->assertEquals( $articleName, $submitData['registered_names'][0]['name'] );
+
+		return compact('branchId', 'articleName', 'articlePart1', 'articlePart2');
+	}
+
+	/**
+	 * @covers ::submitContentToTwig
+	 *
+	 * @depends testSubmitContentToTwig
+	 */
+	public function testGetArticleFromArticleName( array $articleData ) {
+		$branchId = $articleData['branchId'];
+		$articleName = $articleData['articleName'];
+		$articlePart1 = $articleData['articlePart1'];
+		$articlePart2 = $articleData['articlePart2'];
+
+		$submitData = $this->rpc->getArticleFromArticleName( $branchId, $articleName );
+
+		$this->assertEquals( "\n$articlePart1\n$articlePart2", $submitData );
 	}
 }
