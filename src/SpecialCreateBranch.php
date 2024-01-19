@@ -8,6 +8,7 @@ use Exception;
 use FormatJson;
 use FormSpecialPage;
 use LogicException;
+use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
 use MediaWiki\Extension\Lakat\Storage\LakatStorageStub;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\SlotRecord;
@@ -43,8 +44,8 @@ class SpecialCreateBranch extends FormSpecialPage {
 				'type' => 'radio',
 				'flatlist' => 1,
 				'options-messages' => [
-					'createbranch-type-proper' => 'proper',
-					'createbranch-type-twig' => 'twig'
+					'createbranch-type-proper' => BranchType::PROPER,
+					'createbranch-type-twig' => BranchType::TWIG
 				],
 				'default' => 'proper',
 			],
@@ -74,8 +75,14 @@ class SpecialCreateBranch extends FormSpecialPage {
 
 		// create branch remotely
 		try {
-			$branchId = LakatStorageStub::getInstance()->createBranch( $branchName, $data );
+			$branchType = $data['BranchType'];
+			$signature = $data['Token'];
+			$acceptConflicts = $data['AllowConflicts'];
+			$msg = 'Genesis submit';
+			$branchId = LakatStorageStub::getInstance()->createGenesisBranch( $branchType, $branchName, $signature, $acceptConflicts, $msg);
+//			$branchId2 = LakatStorageRPC::getInstance()->createGenesisBranch( $branchType, $branchName, $signature, $acceptConflicts, $msg);
 		} catch ( Exception $e ) {
+//			throw $e;
 			return Status::newFatal( 'createbranch-error-remote' );
 		}
 
@@ -83,6 +90,7 @@ class SpecialCreateBranch extends FormSpecialPage {
 		$page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $title );
 
 		$json = FormatJson::encode( [ 'BranchId' => $branchId ] + $data );
+//		$json = FormatJson::encode( [ 'BranchId' => $branchId, 'BranchId2' => $branchId2 ] + $data );
 		$content = ContentHandler::makeContent( $json, $title, CONTENT_MODEL_JSON );
 		if ( !$content->isValid() ) {
 			throw new LogicException( 'Json parsing failed' );

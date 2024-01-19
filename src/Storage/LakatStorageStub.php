@@ -15,7 +15,14 @@ class LakatStorageStub implements LakatStorageInterface {
 		return self::$instance;
 	}
 
-	public function createBranch( string $name, array $options ): string {
+	public function createGenesisBranch(
+		int $branchType,
+		string $name,
+		string $signature,
+		bool $acceptConflicts,
+		string $msg
+	): string
+	{
 		$branchId = 'branch_' . $this->getSlug( $name );
 
 		// create directory for this branch
@@ -28,7 +35,7 @@ class LakatStorageStub implements LakatStorageInterface {
 		if (
 			!file_put_contents(
 				$dir . '/.branch',
-				json_encode( compact( 'name' ) + $options, JSON_THROW_ON_ERROR )
+				json_encode( compact( 'branchType', 'name', 'signature', 'acceptConflicts', 'msg' ), JSON_THROW_ON_ERROR )
 			)
 		) {
 			throw new Exception( 'Failed to write branch data to file ' . $dir . '/.branch' );
