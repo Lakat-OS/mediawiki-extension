@@ -20,7 +20,7 @@
 namespace MediaWiki\Extension\Lakat;
 
 use Article;
-use MediaWiki\Extension\Lakat\Domain\BucketIdType;
+use MediaWiki\Extension\Lakat\Domain\BucketRefType;
 use MediaWiki\Extension\Lakat\Domain\BucketSchema;
 use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
 use MediaWiki\Hook\BeforePageDisplayHook;
@@ -197,7 +197,7 @@ class Hooks implements
 					[
 						"data" => [
 							"order" => [
-								["id" => 0, "type" => BucketIdType::NO_REF]
+								["id" => 0, "type" => BucketRefType::NO_REF]
 							],
 							"name" => $title->getSubpageText()
 						],
@@ -229,7 +229,7 @@ class Hooks implements
 					[
 						"data" => [
 							"order" => [
-								[ "id" => 0, "type" => BucketIdType::NO_REF ]
+								[ "id" => 0, "type" => BucketRefType::NO_REF ]
 							],
 							"name" => $title->getSubpageText()
 						],

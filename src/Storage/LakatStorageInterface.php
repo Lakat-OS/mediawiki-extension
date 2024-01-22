@@ -18,9 +18,11 @@ interface LakatStorageInterface {
 
 	//get_branch_data_from_branch_id(branch_id: str, deserialize_buckets: bool)
 	//get_article_from_article_name(branch_id: str, name: str)
-	//get_local_branches()
 
-	public function branches(): array;
+	/**
+	 * @return array Array of branch ids.
+	 */
+	public function getLocalBranches(): array;
 
 	/**
 	 * @param string $branchId
