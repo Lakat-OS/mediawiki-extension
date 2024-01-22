@@ -7,10 +7,7 @@ use ContentHandler;
 use Exception;
 use FormatJson;
 use JsonContent;
-use MediaWiki\Language\RawMessage;
 use MediaWiki\MediaWikiServices;
-use MediaWiki\Permissions\Authority;
-use MediaWiki\Revision\RevisionRecord;
 use MediaWiki\Title\Title;
 use MediaWiki\User\UserIdentity;
 use WikiPage;
@@ -22,34 +19,29 @@ class LakatArticleMetadata {
 			throw new Exception("Branch page doesn't exist");
 		}
 		$metadata = self::getPageMetadata($page);
-		if (!isset($metadata->BranchId)) {
+		if (!isset($metadata['BranchId'])) {
 			throw new Exception('Invalid metadata: BranchId field is not set');
 		}
-		return $metadata->BranchId;
+		return $metadata['BranchId'];
 	}
 
-	public static function saveArticleId( WikiPage $wikiPage, UserIdentity $user, string $articleId): void
+	public static function save( WikiPage $wikiPage, UserIdentity $user, array $data): void
 	{
-		$articleMetadataContent = ContentHandler::makeContent( FormatJson::encode(compact('articleId')), null, CONTENT_MODEL_JSON);
 		$pageUpdater = $wikiPage->newPageUpdater( $user );
-		$pageUpdater->setContent('lakat', $articleMetadataContent);
-		$pageUpdater->saveRevision(CommentStoreComment::newUnsavedComment('Lakat: added article metadata'), EDIT_SUPPRESS_RC);
+
+		$content = ContentHandler::makeContent( FormatJson::encode($data), null, CONTENT_MODEL_JSON);
+		$pageUpdater->setContent('lakat', $content);
+
+		$summary = CommentStoreComment::newUnsavedComment( 'Lakat: updated article metadata' );
+		$flags = EDIT_INTERNAL | EDIT_SUPPRESS_RC;
+		$pageUpdater->saveRevision( $summary, $flags );
 	}
 
-	public static function hasArticleId( WikiPage $wikiPage ): bool {
-		$metadata = self::getPageMetadata($wikiPage);
-		return isset($metadata->articleId);
+	public static function load( WikiPage $wikiPage ): array {
+		return self::getPageMetadata($wikiPage);
 	}
 
-	public static function getArticleId( WikiPage $wikiPage ): string {
-		$metadata = self::getPageMetadata($wikiPage);
-		if (!isset($metadata->articleId)) {
-			throw new Exception('Article has invalid metadata: articleId field is not set');
-		}
-		return $metadata->articleId;
-	}
-
-	private static function getPageMetadata(WikiPage $page): object {
+	private static function getPageMetadata( WikiPage $page ): array {
 		$revisionRecord = $page->getRevisionRecord();
 		if (!$revisionRecord->hasSlot('lakat')) {
 			throw new Exception('Page has no metadata slot');
@@ -62,6 +54,6 @@ class LakatArticleMetadata {
 		if ( $data === null || !$data->isGood()) {
 			throw new Exception('Page has invalid metadata');
 		}
-		return $data->getValue();
+		return (array)$data->getValue();
 	}
 }

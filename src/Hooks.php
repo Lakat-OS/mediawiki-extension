@@ -20,32 +20,17 @@
 namespace MediaWiki\Extension\Lakat;
 
 use Article;
-use CommentStoreComment;
-use ContentHandler;
-use Exception;
-use JsonContent;
-use LogicException;
-use MediaWiki\EditPage\EditPage;
-use MediaWiki\Extension\Lakat\Storage\LakatStorageStub;
+use MediaWiki\Extension\Lakat\Domain\BucketIdType;
+use MediaWiki\Extension\Lakat\Domain\BucketSchema;
+use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
 use MediaWiki\Hook\BeforePageDisplayHook;
 use MediaWiki\Hook\MediaWikiServicesHook;
 use MediaWiki\Hook\SkinTemplateNavigation__UniversalHook;
-use MediaWiki\Language\RawMessage;
-use MediaWiki\MediaWikiServices;
-use MediaWiki\Revision\RenderedRevision;
-use MediaWiki\Revision\RevisionRecord;
 use MediaWiki\Revision\SlotRecord;
 use MediaWiki\Revision\SlotRoleRegistry;
-use MediaWiki\Settings\Source\Format\JsonFormat;
-use MediaWiki\Storage\EditResult;
 use MediaWiki\Storage\Hook\PageSaveCompleteHook;
-use MediaWiki\Storage\PageUpdater;
 use MediaWiki\Title\Title;
-use MediaWiki\User\UserIdentity;
-use SkinTemplate;
 use User;
-use Status;
-use WikiPage;
 
 class Hooks implements
 	MediaWikiServicesHook,
@@ -167,16 +152,6 @@ class Hooks implements
 		return true;
 	}
 
-	/**
-	 * This hook sets 'lakat' content model as default for any subpage in Branch/
-	 */
-	public static function onContentHandlerDefaultModelFor( Title $title, ?string &$model ): bool {
-		if ( str_starts_with( $title->getText(), self::getCurrentBranch() . '/') ) {
-			$model = LakatContent::MODEL_ID;
-		}
-		return true;
-	}
-
 	public static function getCurrentBranch(): string {
 		// TODO: replace this stub
 		return 'BranchX';
@@ -197,6 +172,11 @@ class Hooks implements
 	}
 
 	public function onPageSaveComplete( $wikiPage, $user, $summary, $flags, $revisionRecord, $editResult ): void {
+		// skip internal edits to avoid infinite loop when saving metadata
+		if ($flags & EDIT_INTERNAL) {
+			return;
+		}
+
 		// Article is a subpage of a branch page
 		$title = $wikiPage->getTitle();
 		if ($title->isSubpage()) {
@@ -204,16 +184,67 @@ class Hooks implements
 
 			// Save page in remote storage if necessary
 			$blob = $revisionRecord->getContent(SlotRecord::MAIN)->serialize();
-			if ($editResult->isNew() && !LakatArticleMetadata::hasArticleId($wikiPage)) {
+			if ($editResult->isNew()) {
 				// create article on remote storage
-				$articleId = LakatStorageStub::getInstance()->submitFirst($branchId, $title->getSubpageText(), $blob);
-				// save article id in page metadata
-				LakatArticleMetadata::saveArticleId($wikiPage, $user, $articleId);
+				$contents = [
+					[
+						"data" => $blob,
+						"schema" => BucketSchema::DEFAULT_ATOMIC,
+						"parent_id" => base64_encode(''),
+						"signature" => base64_encode(''),
+						"refs" => []
+					],
+					[
+						"data" => [
+							"order" => [
+								["id" => 0, "type" => BucketIdType::NO_REF]
+							],
+							"name" => $title->getSubpageText()
+						],
+						"schema" => BucketSchema::DEFAULT_MOLECULAR,
+						"parent_id" => base64_encode(''),
+						"signature" => base64_encode(''),
+						"refs" => []
+					]
+				];
+				$publicKey = '';
+				$proof = '';
+				$msg = $summary;
+				$submitData = LakatStorageRPC::getInstance()->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
+				// save page metadata
+				LakatArticleMetadata::save( $wikiPage, $user, $submitData );
 			} else {
-				// get articleId from page metadata
-				$articleId = LakatArticleMetadata::getArticleId($wikiPage);
+				// get article bucket id from page metadata
+				$submitData = LakatArticleMetadata::load( $wikiPage );
+				$bucketRefs = $submitData['bucket_refs'];
 				// update article on remote storage
-				LakatStorageStub::getInstance()->submitNext($branchId, $articleId, $blob);
+				$contents = [
+					[
+						"data" => $blob,
+						"schema" => BucketSchema::DEFAULT_ATOMIC,
+						"parent_id" => $bucketRefs[0],
+						"signature" => base64_encode( '' ),
+						"refs" => []
+					],
+					[
+						"data" => [
+							"order" => [
+								[ "id" => 0, "type" => BucketIdType::NO_REF ]
+							],
+							"name" => $title->getSubpageText()
+						],
+						"schema" => BucketSchema::DEFAULT_MOLECULAR,
+						"parent_id" => $bucketRefs[1],
+						"signature" => base64_encode( '' ),
+						"refs" => []
+					]
+				];
+				$publicKey = '';
+				$proof = '';
+				$msg = $summary;
+				$submitData = LakatStorageRPC::getInstance()->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
+				// update page metadata
+				LakatArticleMetadata::save( $wikiPage, $user, $submitData );
 			}
 		}
 	}

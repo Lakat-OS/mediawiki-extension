@@ -41,15 +41,10 @@
 		"BeforePageDisplay": "LakatHooks",
 		"SkinTemplateNavigation::Universal": "LakatHooks",
 		"GetPreferences": "LakatHooks",
-		"PageSaveComplete": "LakatHooks",
-		"CustomEditor": "LakatHooks",
-		"ContentHandlerDefaultModelFor": "LakatHooks"
+		"PageSaveComplete": "LakatHooks"
 	},
 	"Actions": {
 		"view": "MediaWiki\\Extension\\Lakat\\LakatViewAction"
-	},
-	"ContentHandlers": {
-		"lakat": "MediaWiki\\Extension\\Lakat\\LakatContentHandler"
 	},
 	"SpecialPages": {
 		"Branches": "MediaWiki\\Extension\\Lakat\\SpecialBranches",

@@ -40,20 +40,37 @@ class LakatStorageRPC implements LakatStorageInterface {
 	}
 
 	public function createGenesisBranch( int $branchType, string $name, string $signature, bool $acceptConflicts, string $msg ) : string {
-		$method = 'create_genesis_branch';
+		$method = $this->camelToSnakeCase( __FUNCTION__ );
 		$params = [
-			'branch_type' => $branchType,
-			'name' => $name,
-			'signature' => base64_encode( $signature ),
-			'accept_conflicts' => $acceptConflicts,
-			'msg' => $msg,
+			$branchType,
+			$name,
+			base64_encode( $signature ),
+			$acceptConflicts,
+			$msg,
 		];
+		return $this->rpc( $method, $params );
+	}
 
-		return $this->rpc( $method, array_values( $params ) );
+	public function getBranchNameFromBranchId( string $branchId ) : string {
+		$method = $this->camelToSnakeCase( __FUNCTION__ );
+		$params = [ $branchId ];
+		return $this->rpc( $method, $params );
 	}
 
 	public function branches() : array {
 		throw new LogicException( 'Not implemented' );
+	}
+
+	public function submitContentToTwig( string $branchId, array $contents, string $publicKey, string $proof, string $msg ) : array {
+		$method = $this->camelToSnakeCase( __FUNCTION__ );
+		$params = [
+			$branchId,
+			$contents,
+			$publicKey,
+			$proof,
+			$msg
+		];
+		return $this->rpc( $method, $params );
 	}
 
 	public function submitFirst( string $branchId, string $articleName, string $content ) : string {
@@ -64,21 +81,25 @@ class LakatStorageRPC implements LakatStorageInterface {
 		throw new LogicException( 'Not implemented' );
 	}
 
-	public function fetchArticle( string $branchId, string $articleId ) : string {
-		throw new LogicException( 'Not implemented' );
+	public function getArticleFromArticleName( string $branchId, string $name ): string {
+		$method = $this->camelToSnakeCase( __FUNCTION__ );
+		$params = [
+			$branchId,
+			$name
+		];
+		return $this->rpc($method, $params);
 	}
 
-	public function findArticleIdByName( string $branchId, string $articleName ) : ?string {
-		throw new LogicException( 'Not implemented' );
-	}
-
-	private function rpc( string $method, array $params ) {
+	private function rpc( string $method, array $params = [] ) {
 		$data = [
 			'jsonrpc' => '2.0',
 			'id' => $this->globalIdGenerator->newRawUUIDv4(),
 			'method' => $method,
-			'params' => $params,
 		];
+		if ( $params ) {
+			$data['params'] = $params;
+		}
+
 		$options = [
 			'method' => 'POST',
 			'postData' => json_encode( $data ),
@@ -120,5 +141,9 @@ class LakatStorageRPC implements LakatStorageInterface {
 		// Sample success response:
 		// {"result": "AVESAmkJ", "id": "4fb833ab66314861ae081a688bb1ac18", "jsonrpc": "2.0"}
 		return $response['result'];
+	}
+
+	private function camelToSnakeCase( string $str ) : string {
+		return strtolower( preg_replace( '/[A-Z]/', '_$0', $str ) );
 	}
 }

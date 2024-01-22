@@ -1,6 +1,6 @@
 <?php
 
-namespace MediaWiki\Extension\Lakat;
+namespace MediaWiki\Extension\Lakat\Domain;
 
 class BranchType
 {

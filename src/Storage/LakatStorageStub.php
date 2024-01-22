@@ -44,6 +44,11 @@ class LakatStorageStub implements LakatStorageInterface {
 		return $branchId;
 	}
 
+	public function getBranchNameFromBranchId(string $branchId): string
+	{
+		throw new \LogicException('Not implemented');
+	}
+
 	public function branches(): array {
 		$branches = [];
 		foreach ( glob( $this->getBasePath() . '/branch_*' ) as $dir ) {
@@ -72,6 +77,10 @@ class LakatStorageStub implements LakatStorageInterface {
 		$this->saveArticleName2Id( $branchId, $articleName, $articleId );
 
 		return $articleId;
+	}
+
+	public function submitContentToTwig( string $branchId, array $contents, string $publicKey, string $proof, string $msg ) : array {
+		throw new \LogicException('Not implemented');
 	}
 
 	public function submitNext( string $branchId, string $articleId, string $content ): void {
@@ -124,6 +133,11 @@ class LakatStorageStub implements LakatStorageInterface {
 
 	private function getBranchDir( string $branchId ): string {
 		return $this->getBasePath() . '/' . $branchId;
+	}
+
+	public function getArticleFromArticleName(string $branchId, string $name): string
+	{
+		throw new \LogicException('Not implemented');
 	}
 
 	private function getArticleFile( string $branchId, string $articleId ): string {
