@@ -200,4 +200,19 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertEquals("\n$articlePart1\n$newArticlePart2", $content);
 	}
+
+	/**
+	 * @covers ::submitContentToTwig
+	 *
+	 * @depends testCreateGenesisBranch
+	 */
+	public function testBranches( array $branchData ) {
+		$branchId = $branchData['branchId'];
+		$branchName = $branchData['branchName'];
+
+		$branches = $this->rpc->getLocalBranches();
+
+		$this->assertNotEmpty( $branches );
+		$this->assertContains( $branchId, $branches );
+	}
 }

@@ -22,7 +22,7 @@
 
 	"specialpages-group-lakat": "Lakat",
 	"branches": "Branches",
-	"branches-summary": "List of remote branches",
+	"branches-summary": "List of local branches",
 	"createbranch": "Create Branch",
 	"createbranch-name": "Branch name",
 	"createbranch-token": "Token",

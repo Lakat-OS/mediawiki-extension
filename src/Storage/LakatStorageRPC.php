@@ -57,8 +57,10 @@ class LakatStorageRPC implements LakatStorageInterface {
 		return $this->rpc( $method, $params );
 	}
 
-	public function branches() : array {
-		throw new LogicException( 'Not implemented' );
+	public function getLocalBranches() : array {
+		$method = $this->camelToSnakeCase( __FUNCTION__ );
+		$params = [];
+		return $this->rpc( $method, $params );
 	}
 
 	public function submitContentToTwig( string $branchId, array $contents, string $publicKey, string $proof, string $msg ) : array {
