@@ -4,7 +4,7 @@ namespace MediaWiki\Extension\Lakat\Tests\Integration\Storage;
 
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Extension\Lakat\Domain\BranchType;
-use MediaWiki\Extension\Lakat\Domain\BucketIdType;
+use MediaWiki\Extension\Lakat\Domain\BucketRefType;
 use MediaWiki\Extension\Lakat\Domain\BucketSchema;
 use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
 use MediaWiki\Http\HttpRequestFactory;
@@ -98,8 +98,8 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 			[
 				"data" => [
 					"order" => [
-						["id" => 0, "type" => BucketIdType::NO_REF],
-						["id" => 1, "type" => BucketIdType::NO_REF]],
+						["id" => 0, "type" => BucketRefType::NO_REF],
+						["id" => 1, "type" => BucketRefType::NO_REF]],
 					"name" => $articleName
 				],
 				"schema" => BucketSchema::DEFAULT_MOLECULAR,
@@ -172,8 +172,8 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 			[
 				"data" => [
 					"order" => [
-						["id" => $submitData['bucket_refs'][0], "type" => BucketIdType::WITH_ID_REF],
-						["id" => 0, "type" => BucketIdType::NO_REF]
+						["id" => $submitData['bucket_refs'][0], "type" => BucketRefType::WITH_ID_REF],
+						["id" => 0, "type" => BucketRefType::NO_REF]
 					],
 					"name" => $articleName
 				],
