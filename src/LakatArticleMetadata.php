@@ -19,10 +19,10 @@ class LakatArticleMetadata {
 			throw new Exception("Branch page doesn't exist");
 		}
 		$metadata = self::getPageMetadata($page);
-		if (!isset($metadata['BranchId'])) {
-			throw new Exception('Invalid metadata: BranchId field is not set');
+		if (!isset($metadata['id'])) {
+			throw new Exception('Invalid branch page metadata: id is not set');
 		}
-		return $metadata['BranchId'];
+		return $metadata['id'];
 	}
 
 	public static function save( WikiPage $wikiPage, UserIdentity $user, array $data): void
