@@ -12,12 +12,13 @@ interface LakatStorageInterface {
 	 *
 	 * @return string Branch id
 	 */
-	public function createGenesisBranch( int $branchType, string $name, string $signature, bool $acceptConflicts, string $msg ): string;
+	public function createGenesisBranch(
+		int $branchType, string $name, string $signature, bool $acceptConflicts, string $msg
+	): string;
 
-	public function getBranchNameFromBranchId(string $branchId): string;
+	public function getBranchNameFromBranchId( string $branchId ): string;
 
-	//get_branch_data_from_branch_id(branch_id: str, deserialize_buckets: bool)
-	//get_article_from_article_name(branch_id: str, name: str)
+	public function getBranchDataFromBranchId( string $branchId, bool $deserializeBuckets ): array;
 
 	/**
 	 * @return array Array of branch ids.
@@ -87,7 +88,9 @@ interface LakatStorageInterface {
 	 * }
 	 * </pre>
 	 */
-	public function submitContentToTwig(string $branchId, array $contents, string $publicKey, string $proof, string $msg): array;
+	public function submitContentToTwig(
+		string $branchId, array $contents, string $publicKey, string $proof, string $msg
+	): array;
 
 	/**
 	 * @param string $branchId
@@ -95,5 +98,5 @@ interface LakatStorageInterface {
 	 *
 	 * @return string Article content as all article buckets concatenated.
 	 */
-	public function getArticleFromArticleName(string $branchId, string $name): string;
+	public function getArticleFromArticleName( string $branchId, string $name ): string;
 }

@@ -57,6 +57,12 @@ class LakatStorageRPC implements LakatStorageInterface {
 		return $this->rpc( $method, $params );
 	}
 
+	public function getBranchDataFromBranchId( string $branchId, bool $deserializeBuckets ): array {
+		$method = $this->camelToSnakeCase( __FUNCTION__ );
+		$params = func_get_args();
+		return $this->rpc( $method, $params );
+	}
+
 	public function getLocalBranches() : array {
 		$method = $this->camelToSnakeCase( __FUNCTION__ );
 		$params = [];
