@@ -28,7 +28,16 @@ class SpecialBranches extends SpecialPage {
 		$linkRenderer = $this->getLinkRenderer();
 		foreach ($branchIds as $branchId) {
 			$branchName = LakatStorageRPC::getInstance()->getBranchNameFromBranchId($branchId);
-			$link = $linkRenderer->makeKnownLink( Title::newFromText( $branchName ) );
+			$title = Title::newFromText( $branchName );
+			if ($title->isKnown()) {
+				$link = $linkRenderer->makeKnownLink( $title );
+			} else {
+				$target = Title::newFromText( 'Special:FetchBranch/' . $branchId );
+				$text = $branchName;
+				$extraAttribs = [ 'class' => 'new' ];
+				$query = [ 'branch_id' => $branchId ];
+				$link = $linkRenderer->makeKnownLink( $target, $text, $extraAttribs, $query );
+			}
 			$html .= Html::rawElement( 'li', [], $link ) . "\n";
 		}
 		$html .= Html::closeElement( 'ul' );
