@@ -33,10 +33,7 @@ class SpecialBranches extends SpecialPage {
 				$link = $linkRenderer->makeKnownLink( $title );
 			} else {
 				$target = Title::newFromText( 'Special:FetchBranch/' . $branchId );
-				$text = $branchName;
-				$extraAttribs = [ 'class' => 'new' ];
-				$query = [ 'branch_id' => $branchId ];
-				$link = $linkRenderer->makeKnownLink( $target, $text, $extraAttribs, $query );
+				$link = $linkRenderer->makeKnownLink( $target, $branchName, [ 'class' => 'new' ] );
 			}
 			$html .= Html::rawElement( 'li', [], $link ) . "\n";
 		}

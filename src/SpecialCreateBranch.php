@@ -78,8 +78,7 @@ class SpecialCreateBranch extends FormSpecialPage {
 
 		// redirect to Special:FetchBranch to create branch page
 		$target = Title::newFromText( 'Special:FetchBranch/' . $branchId );
-		$query = [ 'branch_id' => $branchId ];
-		$url = $target->getFullUrlForRedirect( $query );
+		$url = $target->getFullUrlForRedirect();
 		$this->getOutput()->redirect( $url );
 
 		return Status::newGood();
