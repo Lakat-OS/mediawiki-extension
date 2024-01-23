@@ -18,6 +18,46 @@ interface LakatStorageInterface {
 
 	public function getBranchNameFromBranchId( string $branchId ): string;
 
+	/**
+	 * @param string $branchId
+	 * @param bool $deserializeBuckets
+	 * @return array Branch data in following format:
+	 * <pre>
+	 * 	{
+	 * 		"id": "AVESCBPj462IE3xy",
+	 * 		"ns": "qjN0AAAA",
+	 * 		"name": "Test branch 1706023254.6645",
+	 * 		"parent_id": "",
+	 * 		"stable_head": {
+	 * 			"parent_submit_id": "AVESCF2LPvNdnWsBDQaqM3QAAAA=",
+	 * 			"submit_msg": "submit content 1706023254.6745"
+	 * 		},
+	 * 		"config": {
+	 * 			"accept_conflicts": true,
+	 * 			"branch_type": 1
+	 * 		},
+	 * 		"sprouts": [],
+	 * 		"sprout_selection": [],
+	 * 		"name_resolution": "AVESCIUnmRZ4FpkLEAaqM3QAAAA=",
+	 * 		"interaction": "AVESCDSNHSSjvABhEQaqM3QAAAA=",
+	 * 		"signature": "ABAgMA==",
+	 * 		"creation_ts": 1706023254,
+	 * 		"submit_trace": {
+	 * 			"new_buckets": [
+	 * 				"AVESCKQY9RjWsyTiAQ==",
+	 * 				"AVESCFV3X6zCB1LMAQ==",
+	 * 				"AVESCHdqs1gzbaVPAg=="
+	 * 			],
+	 * 			"new_registered_names": [
+	 * 				{
+	 * 					"name": "Article Name 1706023254.6744",
+	 * 					"id": "AVESCHdqs1gzbaVPAg=="
+	 * 				}
+	 * 			]
+	 * 		}
+	 * 	}
+	 * </pre>
+	 */
 	public function getBranchDataFromBranchId( string $branchId, bool $deserializeBuckets ): array;
 
 	/**

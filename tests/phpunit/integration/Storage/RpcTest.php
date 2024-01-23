@@ -227,6 +227,7 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 
 		$branchData = $this->rpc->getBranchDataFromBranchId( $branchId, false );
 
+		$this->assertEquals($branchId, $branchData['id']);
 		$this->assertEquals($branchName, $branchData['name']);
 	}
 }
