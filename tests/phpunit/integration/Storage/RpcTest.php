@@ -202,11 +202,11 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * @covers ::submitContentToTwig
+	 * @covers ::getLocalBranches
 	 *
 	 * @depends testCreateGenesisBranch
 	 */
-	public function testBranches( array $branchData ) {
+	public function testGetLocalBranches( array $branchData ) {
 		$branchId = $branchData['branchId'];
 		$branchName = $branchData['branchName'];
 
@@ -214,5 +214,20 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertNotEmpty( $branches );
 		$this->assertContains( $branchId, $branches );
+	}
+
+	/**
+	 * @covers ::getBranchDataFromBranchId
+	 *
+	 * @depends testCreateGenesisBranch
+	 */
+	public function testGetBranchDataFromBranchId( array $branchTestData ) {
+		$branchId = $branchTestData['branchId'];
+		$branchName = $branchTestData['branchName'];
+
+		$branchData = $this->rpc->getBranchDataFromBranchId( $branchId, false );
+
+		$this->assertEquals($branchId, $branchData['id']);
+		$this->assertEquals($branchName, $branchData['name']);
 	}
 }

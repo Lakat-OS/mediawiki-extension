@@ -48,7 +48,8 @@
 	},
 	"SpecialPages": {
 		"Branches": "MediaWiki\\Extension\\Lakat\\SpecialBranches",
-		"CreateBranch": "MediaWiki\\Extension\\Lakat\\SpecialCreateBranch"
+		"CreateBranch": "MediaWiki\\Extension\\Lakat\\SpecialCreateBranch",
+		"FetchBranch": "MediaWiki\\Extension\\Lakat\\SpecialFetchBranch"
 	},
 	"ExtensionMessagesFiles": {
 		"LakatAlias": "i18n/Lakat.alias.php"

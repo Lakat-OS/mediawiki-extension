@@ -2,22 +2,15 @@
 
 namespace MediaWiki\Extension\Lakat;
 
-use CommentStoreComment;
-use ContentHandler;
 use Exception;
-use FormatJson;
 use FormSpecialPage;
-use LogicException;
 use MediaWiki\Extension\Lakat\Domain\BranchType;
 use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
 use MediaWiki\MediaWikiServices;
-use MediaWiki\Revision\SlotRecord;
 use Status;
 use Title;
 
 class SpecialCreateBranch extends FormSpecialPage {
-	private Title $branchPageTitle;
-
 	public function __construct() {
 		parent::__construct( 'CreateBranch' );
 	}
@@ -71,7 +64,6 @@ class SpecialCreateBranch extends FormSpecialPage {
 		if ( !$title->canExist() ) {
 			return Status::newFatal( 'createbranch-error-invalid-name' );
 		}
-		$this->branchPageTitle = $title;
 
 		// create branch remotely
 		try {
@@ -84,23 +76,10 @@ class SpecialCreateBranch extends FormSpecialPage {
 			return Status::newFatal( 'createbranch-error-remote' );
 		}
 
-		// create branch root page
-		$page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $title );
-
-		$json = FormatJson::encode( [ 'BranchId' => $branchId ] + $data );
-		$content = ContentHandler::makeContent( $json, $title, CONTENT_MODEL_JSON );
-		if ( !$content->isValid() ) {
-			throw new LogicException( 'Json parsing failed' );
-		}
-
-		$comment = CommentStoreComment::newUnsavedComment(
-			wfMessage( 'createbranch-revision-comment' )->inContentLanguage()->text()
-		);
-
-		$page->newPageUpdater( $this->getUser() )
-			->setContent( SlotRecord::MAIN, ContentHandler::makeContent('Branch root page', $title) )
-			->setContent( 'lakat', $content )
-			->saveRevision( $comment );
+		// redirect to Special:FetchBranch to create branch page
+		$target = Title::newFromText( 'Special:FetchBranch/' . $branchId );
+		$url = $target->getFullUrlForRedirect();
+		$this->getOutput()->redirect( $url );
 
 		return Status::newGood();
 	}
@@ -110,9 +89,5 @@ class SpecialCreateBranch extends FormSpecialPage {
 		$userOptionsManager = MediaWikiServices::getInstance()->getUserOptionsManager();
 		$userOptionsManager->setOption( $user, 'lakat-default-branch', $branchName );
 		$userOptionsManager->saveOptions( $user );
-	}
-
-	public function onSuccess() {
-		$this->getOutput()->redirect( $this->branchPageTitle->getLocalURL() );
 	}
 }

@@ -12,12 +12,53 @@ interface LakatStorageInterface {
 	 *
 	 * @return string Branch id
 	 */
-	public function createGenesisBranch( int $branchType, string $name, string $signature, bool $acceptConflicts, string $msg ): string;
+	public function createGenesisBranch(
+		int $branchType, string $name, string $signature, bool $acceptConflicts, string $msg
+	): string;
 
-	public function getBranchNameFromBranchId(string $branchId): string;
+	public function getBranchNameFromBranchId( string $branchId ): string;
 
-	//get_branch_data_from_branch_id(branch_id: str, deserialize_buckets: bool)
-	//get_article_from_article_name(branch_id: str, name: str)
+	/**
+	 * @param string $branchId
+	 * @param bool $deserializeBuckets
+	 * @return array Branch data in following format:
+	 * <pre>
+	 * 	{
+	 * 		"id": "AVESCBPj462IE3xy",
+	 * 		"ns": "qjN0AAAA",
+	 * 		"name": "Test branch 1706023254.6645",
+	 * 		"parent_id": "",
+	 * 		"stable_head": {
+	 * 			"parent_submit_id": "AVESCF2LPvNdnWsBDQaqM3QAAAA=",
+	 * 			"submit_msg": "submit content 1706023254.6745"
+	 * 		},
+	 * 		"config": {
+	 * 			"accept_conflicts": true,
+	 * 			"branch_type": 1
+	 * 		},
+	 * 		"sprouts": [],
+	 * 		"sprout_selection": [],
+	 * 		"name_resolution": "AVESCIUnmRZ4FpkLEAaqM3QAAAA=",
+	 * 		"interaction": "AVESCDSNHSSjvABhEQaqM3QAAAA=",
+	 * 		"signature": "ABAgMA==",
+	 * 		"creation_ts": 1706023254,
+	 * 		"submit_trace": {
+	 * 			"new_buckets": [
+	 * 				"AVESCKQY9RjWsyTiAQ==",
+	 * 				"AVESCFV3X6zCB1LMAQ==",
+	 * 				"AVESCHdqs1gzbaVPAg=="
+	 * 			],
+	 * 			"new_registered_names": [
+	 * 				{
+	 * 					"name": "Article Name 1706023254.6744",
+	 * 					"id": "AVESCHdqs1gzbaVPAg=="
+	 * 				}
+	 * 			]
+	 * 		}
+	 * 	}
+	 * </pre>
+	 */
+	public function getBranchDataFromBranchId( string $branchId, bool $deserializeBuckets ): array;
 
 	/**
 	 * @return array Array of branch ids.
@@ -87,7 +128,9 @@ interface LakatStorageInterface {
 	 * }
 	 * </pre>
 	 */
-	public function submitContentToTwig(string $branchId, array $contents, string $publicKey, string $proof, string $msg): array;
+	public function submitContentToTwig(
+		string $branchId, array $contents, string $publicKey, string $proof, string $msg
+	): array;
 
 	/**
 	 * @param string $branchId
@@ -95,5 +138,5 @@ interface LakatStorageInterface {
 	 *
 	 * @return string Article content as all article buckets concatenated.
 	 */
-	public function getArticleFromArticleName(string $branchId, string $name): string;
+	public function getArticleFromArticleName( string $branchId, string $name ): string;
 }
