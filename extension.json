@@ -41,7 +41,8 @@
 		"BeforePageDisplay": "LakatHooks",
 		"SkinTemplateNavigation::Universal": "LakatHooks",
 		"GetPreferences": "LakatHooks",
-		"PageSaveComplete": "LakatHooks"
+		"PageSaveComplete": "LakatHooks",
+		"LoadExtensionSchemaUpdates": "LakatHooks"
 	},
 	"Actions": {
 		"view": "MediaWiki\\Extension\\Lakat\\LakatViewAction"
