@@ -56,12 +56,13 @@ class LakatViewAction extends ViewAction {
 
 				// Load page from remote storage
 //				$this->getOutput()->clearHTML();
-				$this->getOutput()->addWikiTextAsContent('== Content from remote storage ==');
 
-				$articleName = $title->getSubpageText();
-				$text = LakatStorageRPC::getInstance()->getArticleFromArticleName( $branchId, $articleName );
-
-				$this->getOutput()->addWikiTextAsContent($text);
+//				$this->getOutput()->addWikiTextAsContent('== Content from remote storage ==');
+//
+//				$articleName = $title->getSubpageText();
+//				$text = LakatStorageRPC::getInstance()->getArticleFromArticleName( $branchId, $articleName );
+//
+//				$this->getOutput()->addWikiTextAsContent($text);
 			} catch ( Exception $e) {
 				$this->getOutput()->showFatalError( new RawMessage($e->getMessage()) );
 				return;

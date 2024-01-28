@@ -29,7 +29,7 @@ class StagingService {
 		$row = [
 			'la_branch_name' => $branchName,
 			'la_name' => $articleName,
-			'la_last_rev_id' => -1,
+			'la_last_rev_id' => 0,
 			'la_sync_rev_id' => null,
 		];
 		$dbw = $this->loadBalancer->getConnection( DB_PRIMARY );
