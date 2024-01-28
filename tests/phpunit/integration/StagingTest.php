@@ -49,21 +49,28 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::listModifiedArticles
 	 */
 	public function testListModifiedArticles() {
+		// 1. create branch
 		$branchName = 'Test branch ' . microtime(true);
 		$this->createBranch($branchName);
 
 		// check nothing staged
 		$modifiedArticles = $this->stagingService->listModifiedArticles( $branchName );
-		$this->assertIsArray( $modifiedArticles );
-		$this->assertEmpty( $modifiedArticles );
+		$this->assertEquals( [], $modifiedArticles );
 
-		// submit article in branch
+		// 2. create article
 		$articleName = 'Test article ' . microtime(true);
 		$this->createArticle($branchName, $articleName, 'Test content', 'Test commit');
 
 		// check one article staged
 		$articles = $this->stagingService->listModifiedArticles( $branchName );
 		$this->assertEquals( [$articleName], $articles );
+
+		// 3. submit article
+		$this->submitArticle($branchName, $articleName);
+
+		// check nothing staged
+		$modifiedArticles = $this->stagingService->listModifiedArticles( $branchName );
+		$this->assertEquals( [], $modifiedArticles );
 	}
 
 	private function createBranch( string $branchName ) {
@@ -111,6 +118,10 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 		// 2. removeFromStaging($branchName, $articleName);
 	}
 
+	private function submitArticle( string $branchName, string $articleName ) {
+		$this->removeFromStaging( $branchName, $articleName );
+	}
+
 	private function getUser(): User {
 		return $this->getTestUser()->getUser();
 	}
@@ -123,5 +134,13 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 			'la_sync_rev_id' => null,
 		];
 		$this->getDb()->insert( 'lakat_article', $row, __METHOD__ );
+	}
+
+	private function removeFromStaging( string $branchName, string $articleName ) {
+		$conds = [
+			'la_branch_name' => $branchName,
+			'la_name' => $articleName,
+		];
+		$this->getDb()->delete( 'lakat_article', $conds, __METHOD__ );
 	}
 }
