@@ -27,7 +27,9 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->stagingService = StagingService::getInstance();
+		$services = $this->getServiceContainer();
+		$loadBalancer = $services->getDBLoadBalancer();
+		$this->stagingService = new StagingService( $loadBalancer );
 
 		// use HttpRequestFactory instead of NullHttpRequestFactory to test RPC calls
 		$services = MediaWikiServices::getInstance();
@@ -44,50 +46,24 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * @covers ::listArticles
+	 * @covers ::listModifiedArticles
 	 */
-	public function testListModifiedArticlesEmpty(): void {
-		$modifiedArticles = $this->stagingService->listModifiedArticles();
-
-		$this->assertIsArray( $modifiedArticles );
-		$this->assertEmpty( $modifiedArticles );
-	}
-
-	/**
-	 * @covers ::listArticles
-	 */
-	public function testNewArticleInModifiedArticles() {
+	public function testListModifiedArticles() {
 		$branchName = 'Test branch ' . microtime(true);
 		$this->createBranch($branchName);
+
+		// check nothing staged
+		$modifiedArticles = $this->stagingService->listModifiedArticles( $branchName );
+		$this->assertIsArray( $modifiedArticles );
+		$this->assertEmpty( $modifiedArticles );
+
+		// submit article in branch
 		$articleName = 'Test article ' . microtime(true);
 		$this->createArticle($branchName, $articleName, 'Test content', 'Test commit');
-//		$branchId = $this->rpc->createGenesisBranch( BranchType::TWIG, $branchName, '', true, 'Create test branch' );
-//		$contents = [
-//			[
-//				"data" => 'Test content ' . microtime(true),
-//				"schema" => BucketSchema::DEFAULT_ATOMIC,
-//				"parent_id" => '',
-//				"signature" => '',
-//				"refs" => []
-//			],
-//			[
-//				"data" => [
-//					"order" => [ [ "id" => 1, "type" => BucketRefType::NO_REF ] ],
-//					"name" => 'Test article ' . microtime(true)
-//				],
-//				"schema" => BucketSchema::DEFAULT_MOLECULAR,
-//				"parent_id" => '',
-//				"signature" => '',
-//				"refs" => []
-//			]
-//		];
-//		$submitData = $this->rpc->submitContentToTwig( $branchId, $contents, '', '', 'Submit test article' );
 
-//		$articles = $this->stagingService->listModifiedArticles();
-		$articles = $this->listModifiedArticles( $branchName );
-
-		$this->assertIsArray( $articles );
-		$this->assertContains( $articleName, $articles );
+		// check one article staged
+		$articles = $this->stagingService->listModifiedArticles( $branchName );
+		$this->assertEquals( [$articleName], $articles );
 	}
 
 	private function createBranch( string $branchName ) {
@@ -137,15 +113,6 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 
 	private function getUser(): User {
 		return $this->getTestUser()->getUser();
-	}
-
-	private function listModifiedArticles( string $branchName ): array {
-		$res = $this->getDb()->select('lakat_article', 'la_name', '', __METHOD__);
-		$rows = [];
-		foreach ($res as $row) {
-			$rows[] = $row->la_name;
-		}
-		return $rows;
 	}
 
 	private function addToStaging( string $branchName, string $articleName ) {
