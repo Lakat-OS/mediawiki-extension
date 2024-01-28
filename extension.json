@@ -48,11 +48,11 @@
 		"view": "MediaWiki\\Extension\\Lakat\\LakatViewAction"
 	},
 	"SpecialPages": {
-		"Branches": "MediaWiki\\Extension\\Lakat\\SpecialBranches",
-		"CreateBranch": "MediaWiki\\Extension\\Lakat\\SpecialCreateBranch",
-		"FetchBranch": "MediaWiki\\Extension\\Lakat\\SpecialFetchBranch",
+		"Branches": "MediaWiki\\Extension\\Lakat\\Special\\SpecialBranches",
+		"CreateBranch": "MediaWiki\\Extension\\Lakat\\Special\\SpecialCreateBranch",
+		"FetchBranch": "MediaWiki\\Extension\\Lakat\\Special\\SpecialFetchBranch",
 		"Staging": {
-			"class": "MediaWiki\\Extension\\Lakat\\SpecialStaging",
+			"class": "MediaWiki\\Extension\\Lakat\\Special\\SpecialStaging",
 			"services": [ "LakatStagingService" ]
 		}
 	},

@@ -1,7 +1,8 @@
 <?php
 
-namespace MediaWiki\Extension\Lakat;
+namespace MediaWiki\Extension\Lakat\Special;
 
+use MediaWiki\Extension\Lakat\StagingService;
 use SpecialPage;
 
 class SpecialStaging extends SpecialPage {
