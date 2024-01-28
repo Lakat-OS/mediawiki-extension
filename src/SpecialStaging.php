@@ -5,8 +5,12 @@ namespace MediaWiki\Extension\Lakat;
 use SpecialPage;
 
 class SpecialStaging extends SpecialPage {
-	public function __construct() {
+	private StagingService $stagingService;
+
+	public function __construct( StagingService $stagingService ) {
 		parent::__construct( 'Staging' );
+
+		$this->stagingService = $stagingService;
 	}
 
 	protected function getGroupName() {
@@ -17,9 +21,18 @@ class SpecialStaging extends SpecialPage {
 		parent::execute( $subPage );
 
 		$out = $this->getOutput();
+
+		if ( !$subPage ) {
+			$out->addHTML( "Branch name not specified" );
+
+			return;
+		}
+
+		$articles = $this->stagingService->listModifiedArticles( $subPage );
+
 		$out->addHTML( "<ol>" );
-		for ( $i = 1; $i <= 10; $i ++ ) {
-			$out->addHTML( "<li>List item</li>" );
+		foreach ( $articles as $article ) {
+			$out->addHTML( "<li>$article</li>" );
 		}
 		$out->addHTML( "</ol>" );
 	}

@@ -51,8 +51,14 @@
 		"Branches": "MediaWiki\\Extension\\Lakat\\SpecialBranches",
 		"CreateBranch": "MediaWiki\\Extension\\Lakat\\SpecialCreateBranch",
 		"FetchBranch": "MediaWiki\\Extension\\Lakat\\SpecialFetchBranch",
-		"Staging": "MediaWiki\\Extension\\Lakat\\SpecialStaging"
+		"Staging": {
+			"class": "MediaWiki\\Extension\\Lakat\\SpecialStaging",
+			"services": [ "LakatStagingService" ]
+		}
 	},
+	"ServiceWiringFiles": [
+		"src/ServiceWiring.php"
+	],
 	"ExtensionMessagesFiles": {
 		"LakatAlias": "i18n/Lakat.alias.php"
 	},

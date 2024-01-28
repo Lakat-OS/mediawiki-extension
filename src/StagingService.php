@@ -5,6 +5,8 @@ namespace MediaWiki\Extension\Lakat;
 use Wikimedia\Rdbms\ILoadBalancer;
 
 class StagingService {
+	public const SERVICE_NAME = 'LakatStagingService';
+
 	private ILoadBalancer $loadBalancer;
 
 	public function __construct(ILoadBalancer $loadBalancer) {
