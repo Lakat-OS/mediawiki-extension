@@ -34,6 +34,8 @@
 	"createbranch-error-remote": "Failed to create remote branch",
 	"createbranch-revision-comment": "Lakat: New branch created",
 	"fetcharticle-revision-comment": "Lakat: Article copied from remote storage",
+	"staging": "Commit changes",
+	"staging-summary": "Commit changes",
 	"prefs-lakat": "Lakat",
 	"prefs-options": "Options",
 	"lakat-default-branch": "Default branch"

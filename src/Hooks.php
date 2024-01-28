@@ -128,6 +128,12 @@ class Hooks implements
 				'href' => 'https://another-example.com',
 				'title' => $sktemplate->msg( 'lakat-token-tooltip' )->text(),
 			],
+			'staging' => [
+				'class' => false,
+				'text' => $sktemplate->msg( 'staging' )->text(),
+				'href' => Title::newFromText('Special:Staging')->getLinkURL(),
+				'title' => $sktemplate->msg( 'staging-summary' )->text(),
+			],
 		];
 	}
 
