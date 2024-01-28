@@ -18,7 +18,7 @@ use Title;
 use User;
 
 /**
- * @group staging
+ * @group Database
  * @coversDefaultClass StagingService
  */
 class StagingTest extends MediaWikiIntegrationTestCase {
@@ -57,9 +57,9 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 		$modifiedArticles = $this->stagingService->getStagedArticles( $branchName );
 		$this->assertEquals( [], $modifiedArticles );
 
-		// 2. create article
-		$articleName = 'Test article ' . microtime(true);
-		$this->createArticle($branchName, $articleName, 'Test content', 'Test commit');
+		// 2. create article in the branch
+		$articleName = 'Test article';
+		$this->getExistingTestPage("$branchName/$articleName");
 
 		// check one article staged
 		$articles = $this->stagingService->getStagedArticles( $branchName );
@@ -99,17 +99,11 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 			->saveRevision( $comment );
 	}
 
-	private function createArticle( string $branchName, string $articleName, string $text, string $summary ) {
-		$title = Title::newFromText( "$branchName/$articleName" );
-		$page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $title );
-		$content = ContentHandler::makeContent( $text, $title );
-		$comment = CommentStoreComment::newUnsavedComment( $summary );
-		$page->newPageUpdater( $this->getUser() )
-			->setContent( SlotRecord::MAIN, $content )
-			->saveRevision( $comment );
-	}
-
 	private function submitArticle( string $branchName, string $articleName ) {
+		// here the article should be submitted to lakat storage first,
+		// but it is not needed for the test
+
+		// unstaging the article after it was submitted
 		$this->stagingService->unstageArticle( $branchName, $articleName );
 	}
 
