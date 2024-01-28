@@ -194,7 +194,7 @@ class Hooks implements
 
 			$articleName = $title->getSubpageText();
 
-			LakatServices::getStagingService()->stageArticle( $branchName, $articleName );
+			LakatServices::getStagingService()->stage( $branchName, $articleName );
 
 
 

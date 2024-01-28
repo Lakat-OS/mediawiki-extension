@@ -65,8 +65,8 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 		$articles = $this->stagingService->getStagedArticles( $branchName );
 		$this->assertEquals( [$articleName], $articles );
 
-		// 3. submit article
-		$this->submitArticle($branchName, $articleName);
+		// 3. submit staged articles
+		$this->stagingService->submitStaged($branchName, 'Test submit');
 
 		// check nothing staged
 		$modifiedArticles = $this->stagingService->getStagedArticles( $branchName );
@@ -97,14 +97,6 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 			->setContent( SlotRecord::MAIN, ContentHandler::makeContent('Branch root page', $title) )
 			->setContent( 'lakat', $content )
 			->saveRevision( $comment );
-	}
-
-	private function submitArticle( string $branchName, string $articleName ) {
-		// here the article should be submitted to lakat storage first,
-		// but it is not needed for the test
-
-		// unstaging the article after it was submitted
-		$this->stagingService->unstageArticle( $branchName, $articleName );
 	}
 
 	private function getUser(): User {
