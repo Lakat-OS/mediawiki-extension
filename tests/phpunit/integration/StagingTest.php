@@ -54,7 +54,7 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 		$this->createBranch($branchName);
 
 		// check nothing staged
-		$modifiedArticles = $this->stagingService->listModifiedArticles( $branchName );
+		$modifiedArticles = $this->stagingService->getStagedArticles( $branchName );
 		$this->assertEquals( [], $modifiedArticles );
 
 		// 2. create article
@@ -62,14 +62,14 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 		$this->createArticle($branchName, $articleName, 'Test content', 'Test commit');
 
 		// check one article staged
-		$articles = $this->stagingService->listModifiedArticles( $branchName );
+		$articles = $this->stagingService->getStagedArticles( $branchName );
 		$this->assertEquals( [$articleName], $articles );
 
 		// 3. submit article
 		$this->submitArticle($branchName, $articleName);
 
 		// check nothing staged
-		$modifiedArticles = $this->stagingService->listModifiedArticles( $branchName );
+		$modifiedArticles = $this->stagingService->getStagedArticles( $branchName );
 		$this->assertEquals( [], $modifiedArticles );
 	}
 
@@ -107,29 +107,13 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 		$page->newPageUpdater( $this->getUser() )
 			->setContent( SlotRecord::MAIN, $content )
 			->saveRevision( $comment );
-
-		// when submitted:
-		// 1. save to remote
-		// 2. removeFromStaging($branchName, $articleName);
-		// when reverted:
-		// 1. fetch from remote
-		// 2. save locally
-		// 2. removeFromStaging($branchName, $articleName);
 	}
 
 	private function submitArticle( string $branchName, string $articleName ) {
-		$this->removeFromStaging( $branchName, $articleName );
+		$this->stagingService->unstageArticle( $branchName, $articleName );
 	}
 
 	private function getUser(): User {
 		return $this->getTestUser()->getUser();
-	}
-
-	private function removeFromStaging( string $branchName, string $articleName ) {
-		$conds = [
-			'la_branch_name' => $branchName,
-			'la_name' => $articleName,
-		];
-		$this->getDb()->delete( 'lakat_article', $conds, __METHOD__ );
 	}
 }

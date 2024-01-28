@@ -29,12 +29,12 @@ class SpecialStaging extends SpecialPage {
 			return;
 		}
 
-		$articles = $this->stagingService->listModifiedArticles( $subPage );
+		$articles = $this->stagingService->getStagedArticles( $subPage );
 
-		$out->addHTML( "<ol>" );
+		$out->addHTML( "<ul>" );
 		foreach ( $articles as $article ) {
 			$out->addHTML( "<li>$article</li>" );
 		}
-		$out->addHTML( "</ol>" );
+		$out->addHTML( "</ul>" );
 	}
 }
