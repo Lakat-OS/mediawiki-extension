@@ -108,7 +108,6 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 			->setContent( SlotRecord::MAIN, $content )
 			->saveRevision( $comment );
 
-		$this->addToStaging($branchName, $articleName);
 		// when submitted:
 		// 1. save to remote
 		// 2. removeFromStaging($branchName, $articleName);
@@ -124,16 +123,6 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 
 	private function getUser(): User {
 		return $this->getTestUser()->getUser();
-	}
-
-	private function addToStaging( string $branchName, string $articleName ) {
-		$row = [
-			'la_branch_name' => $branchName,
-			'la_name' => $articleName,
-			'la_last_rev_id' => -1,
-			'la_sync_rev_id' => null,
-		];
-		$this->getDb()->insert( 'lakat_article', $row, __METHOD__ );
 	}
 
 	private function removeFromStaging( string $branchName, string $articleName ) {

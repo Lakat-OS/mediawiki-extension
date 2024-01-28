@@ -187,72 +187,83 @@ class Hooks implements
 		// Article is a subpage of a branch page
 		$title = $wikiPage->getTitle();
 		if ($title->isSubpage()) {
-			$branchId = LakatArticleMetadata::getBranchId($title->getRootText());
+			$branchName = $title->getRootText();
 
-			// Save page in remote storage if necessary
-			$blob = $revisionRecord->getContent(SlotRecord::MAIN)->serialize();
-			if ($editResult->isNew()) {
-				// create article on remote storage
-				$contents = [
-					[
-						"data" => $blob,
-						"schema" => BucketSchema::DEFAULT_ATOMIC,
-						"parent_id" => base64_encode(''),
-						"signature" => base64_encode(''),
-						"refs" => [],
-					],
-					[
-						"data" => [
-							"order" => [
-								["id" => 0, "type" => BucketRefType::NO_REF],
-							],
-							"name" => $title->getSubpageText(),
-						],
-						"schema" => BucketSchema::DEFAULT_MOLECULAR,
-						"parent_id" => base64_encode(''),
-						"signature" => base64_encode(''),
-						"refs" => [],
-					],
-				];
-				$publicKey = '';
-				$proof = '';
-				$msg = $summary;
-				$submitData = LakatStorageRPC::getInstance()->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
-				// save page metadata
-				LakatArticleMetadata::save( $wikiPage, $user, $submitData );
-			} else {
-				// get article bucket id from page metadata
-				$submitData = LakatArticleMetadata::load( $wikiPage );
-				$bucketRefs = $submitData['bucket_refs'];
-				// update article on remote storage
-				$contents = [
-					[
-						"data" => $blob,
-						"schema" => BucketSchema::DEFAULT_ATOMIC,
-						"parent_id" => $bucketRefs[0],
-						"signature" => base64_encode( '' ),
-						"refs" => [],
-					],
-					[
-						"data" => [
-							"order" => [
-								[ "id" => 0, "type" => BucketRefType::NO_REF ],
-							],
-							"name" => $title->getSubpageText(),
-						],
-						"schema" => BucketSchema::DEFAULT_MOLECULAR,
-						"parent_id" => $bucketRefs[1],
-						"signature" => base64_encode( '' ),
-						"refs" => [],
-					],
-				];
-				$publicKey = '';
-				$proof = '';
-				$msg = $summary;
-				$submitData = LakatStorageRPC::getInstance()->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
-				// update page metadata
-				LakatArticleMetadata::save( $wikiPage, $user, $submitData );
-			}
+			// assure that branch $branchName exists
+			LakatArticleMetadata::getBranchId( $branchName );
+
+			$articleName = $title->getSubpageText();
+
+			LakatServices::getStagingService()->stageArticle( $branchName, $articleName );
+
+
+
+//			$branchId = LakatArticleMetadata::getBranchId($title->getRootText());
+//
+//			// Save page in remote storage if necessary
+//			$blob = $revisionRecord->getContent(SlotRecord::MAIN)->serialize();
+//			if ($editResult->isNew()) {
+//				// create article on remote storage
+//				$contents = [
+//					[
+//						"data" => $blob,
+//						"schema" => BucketSchema::DEFAULT_ATOMIC,
+//						"parent_id" => base64_encode(''),
+//						"signature" => base64_encode(''),
+//						"refs" => [],
+//					],
+//					[
+//						"data" => [
+//							"order" => [
+//								["id" => 0, "type" => BucketRefType::NO_REF],
+//							],
+//							"name" => $title->getSubpageText(),
+//						],
+//						"schema" => BucketSchema::DEFAULT_MOLECULAR,
+//						"parent_id" => base64_encode(''),
+//						"signature" => base64_encode(''),
+//						"refs" => [],
+//					],
+//				];
+//				$publicKey = '';
+//				$proof = '';
+//				$msg = $summary;
+//				$submitData = LakatStorageRPC::getInstance()->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
+//				// save page metadata
+//				LakatArticleMetadata::save( $wikiPage, $user, $submitData );
+//			} else {
+//				// get article bucket id from page metadata
+//				$submitData = LakatArticleMetadata::load( $wikiPage );
+//				$bucketRefs = $submitData['bucket_refs'];
+//				// update article on remote storage
+//				$contents = [
+//					[
+//						"data" => $blob,
+//						"schema" => BucketSchema::DEFAULT_ATOMIC,
+//						"parent_id" => $bucketRefs[0],
+//						"signature" => base64_encode( '' ),
+//						"refs" => [],
+//					],
+//					[
+//						"data" => [
+//							"order" => [
+//								[ "id" => 0, "type" => BucketRefType::NO_REF ],
+//							],
+//							"name" => $title->getSubpageText(),
+//						],
+//						"schema" => BucketSchema::DEFAULT_MOLECULAR,
+//						"parent_id" => $bucketRefs[1],
+//						"signature" => base64_encode( '' ),
+//						"refs" => [],
+//					],
+//				];
+//				$publicKey = '';
+//				$proof = '';
+//				$msg = $summary;
+//				$submitData = LakatStorageRPC::getInstance()->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
+//				// update page metadata
+//				LakatArticleMetadata::save( $wikiPage, $user, $submitData );
+//			}
 		}
 	}
 
