@@ -6,24 +6,25 @@ use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Extension\Lakat\Domain\BranchType;
 use MediaWiki\Extension\Lakat\Domain\BucketRefType;
 use MediaWiki\Extension\Lakat\Domain\BucketSchema;
-use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
+use MediaWiki\Extension\Lakat\LakatServices;
+use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\Http\HttpRequestFactory;
 use MediaWiki\MediaWikiServices;
 use MediaWikiIntegrationTestCase;
 use Psr\Log\NullLogger;
 
 /**
- * @group rpc
- * @coversDefaultClass LakatStorageRPC
+ * @coversDefaultClass LakatStorage
  */
-class RpcTest extends MediaWikiIntegrationTestCase {
-	private LakatStorageRPC $rpc;
+class LakatStorageTest extends MediaWikiIntegrationTestCase {
+	private LakatStorage $lakatStorage;
 
 	protected function setUp() : void {
 		parent::setUp();
 
+		$services = $this->getServiceContainer();
+
 		// use HttpRequestFactory instead of NullHttpRequestFactory to test RPC calls
-		$services = MediaWikiServices::getInstance();
 		$services->resetServiceForTesting('HttpRequestFactory');
 		$services->redefineService(
 			'HttpRequestFactory',
@@ -35,7 +36,7 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 			}
 		);
 
-		$this->rpc = LakatStorageRPC::getInstance();
+		$this->lakatStorage = LakatServices::getLakatStorage( $services );
 	}
 
 	/**
@@ -48,7 +49,7 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 		$acceptConflicts = true;
 		$msg = 'Create genesis test branch';
 
-		$branchId = $this->rpc->createGenesisBranch( $branchType, $branchName, $signature, $acceptConflicts, $msg );
+		$branchId = $this->lakatStorage->createGenesisBranch( $branchType, $branchName, $signature, $acceptConflicts, $msg );
 
 		$this->assertNotEmpty($branchId);
 
@@ -64,7 +65,7 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 		$branchId = $branchData['branchId'];
 		$branchName = $branchData['branchName'];
 
-		$retrievedBranchName = $this->rpc->getBranchNameFromBranchId($branchId);
+		$retrievedBranchName = $this->lakatStorage->getBranchNameFromBranchId($branchId);
 
 		$this->assertEquals($branchName, $retrievedBranchName);
 	}
@@ -113,7 +114,7 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 		$proof = base64_encode(random_bytes(10));
 		$msg = 'submit content ' . microtime(true);
 
-		$submitData = $this->rpc->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
+		$submitData = $this->lakatStorage->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
 
 		$this->assertNotEmpty( $submitData );
 		$this->assertIsArray( $submitData );
@@ -135,7 +136,7 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 		$articlePart1 = $articleData['articlePart1'];
 		$articlePart2 = $articleData['articlePart2'];
 
-		$submitData = $this->rpc->getArticleFromArticleName( $branchId, $articleName );
+		$submitData = $this->lakatStorage->getArticleFromArticleName( $branchId, $articleName );
 
 		$this->assertEquals( "\n$articlePart1\n$articlePart2", $submitData );
 	}
@@ -188,7 +189,7 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 		$proof = base64_encode(random_bytes(10));
 		$msg = 'second submit ' . microtime(true);
 
-		$submitData = $this->rpc->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
+		$submitData = $this->lakatStorage->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
 
 		$this->assertNotEmpty( $submitData );
 		$this->assertIsArray( $submitData );
@@ -196,7 +197,7 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 		$this->assertCount( 2, $submitData['bucket_refs'] );
 		$this->assertEquals( $articleName, $submitData['registered_names'][0]['name'] );
 
-		$content = $this->rpc->getArticleFromArticleName( $branchId, $articleName );
+		$content = $this->lakatStorage->getArticleFromArticleName( $branchId, $articleName );
 
 		$this->assertEquals("\n$articlePart1\n$newArticlePart2", $content);
 	}
@@ -210,7 +211,7 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 		$branchId = $branchData['branchId'];
 		$branchName = $branchData['branchName'];
 
-		$branches = $this->rpc->getLocalBranches();
+		$branches = $this->lakatStorage->getLocalBranches();
 
 		$this->assertNotEmpty( $branches );
 		$this->assertContains( $branchId, $branches );
@@ -225,7 +226,7 @@ class RpcTest extends MediaWikiIntegrationTestCase {
 		$branchId = $branchTestData['branchId'];
 		$branchName = $branchTestData['branchName'];
 
-		$branchData = $this->rpc->getBranchDataFromBranchId( $branchId, false );
+		$branchData = $this->lakatStorage->getBranchDataFromBranchId( $branchId, false );
 
 		$this->assertEquals($branchId, $branchData['id']);
 		$this->assertEquals($branchName, $branchData['name']);

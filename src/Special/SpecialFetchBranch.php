@@ -6,15 +6,19 @@ use CommentStoreComment;
 use ContentHandler;
 use Exception;
 use FormatJson;
-use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
+use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\SlotRecord;
 use RedirectSpecialArticle;
 use Title;
 
 class SpecialFetchBranch extends RedirectSpecialArticle {
-	public function __construct() {
+	private LakatStorage $lakatStorage;
+
+	public function __construct( LakatStorage $lakatStorage ) {
 		parent::__construct( 'FetchBranch' );
+
+		$this->lakatStorage = $lakatStorage;
 	}
 
 	protected function getGroupName(): string {
@@ -38,7 +42,7 @@ class SpecialFetchBranch extends RedirectSpecialArticle {
 			return false;
 		}
 
-		$branchName = LakatStorageRPC::getInstance()->getBranchNameFromBranchId( $branchId );
+		$branchName = $this->lakatStorage->getBranchNameFromBranchId( $branchId );
 
 		$title = Title::newFromText( $branchName );
 
@@ -53,7 +57,7 @@ class SpecialFetchBranch extends RedirectSpecialArticle {
 		}
 
 		// fetch branch data from remote
-		$data = LakatStorageRPC::getInstance()->getBranchDataFromBranchId( $branchId, false );
+		$data = $this->lakatStorage->getBranchDataFromBranchId( $branchId, false );
 
 		// create branch page
 		$page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $title );

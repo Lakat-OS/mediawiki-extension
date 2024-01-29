@@ -23,7 +23,7 @@ use Article;
 use DatabaseUpdater;
 use MediaWiki\Extension\Lakat\Domain\BucketRefType;
 use MediaWiki\Extension\Lakat\Domain\BucketSchema;
-use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
+use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\Hook\BeforePageDisplayHook;
 use MediaWiki\Hook\MediaWikiServicesHook;
 use MediaWiki\Hook\SkinTemplateNavigation__UniversalHook;
@@ -200,6 +200,6 @@ class Hooks implements
 	}
 
 	public function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
-		$updater->addExtensionTable( 'lakat_article', realpath(__DIR__ . '/../sql/20240127_212200_create_article_table.sql') );
+		$updater->addExtensionTable( 'lakat_staging', realpath(__DIR__ . '/../sql/20240127_212200_create_article_table.sql') );
 	}
 }
