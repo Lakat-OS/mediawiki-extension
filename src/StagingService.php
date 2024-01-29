@@ -22,7 +22,7 @@ use Wikimedia\Rdbms\ILoadBalancer;
 class StagingService {
 	public const SERVICE_NAME = 'LakatStagingService';
 
-	private const TABLE = 'lakat_article';
+	private const TABLE = 'lakat_staging';
 
 	private ILoadBalancer $loadBalancer;
 
@@ -46,8 +46,6 @@ class StagingService {
 		$row = [
 			'la_branch_name' => $branchName,
 			'la_name' => $articleName,
-			'la_last_rev_id' => 0,
-			'la_sync_rev_id' => null,
 		];
 		$dbw = $this->loadBalancer->getConnection( DB_PRIMARY );
 		$dbw->insert( self::TABLE, $row, __METHOD__ );
