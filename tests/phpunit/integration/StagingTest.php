@@ -66,7 +66,7 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 		$this->assertEquals( [$articleName], $articles );
 
 		// 3. submit staged articles
-		$this->stagingService->submitStaged($branchName, 'Test submit');
+		$this->stagingService->submitStaged( $this->getUser(), $branchName, 'Test submit' );
 
 		// check nothing staged
 		$modifiedArticles = $this->stagingService->getStagedArticles( $branchName );

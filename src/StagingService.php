@@ -8,6 +8,7 @@ use MediaWiki\Extension\Lakat\Domain\BucketSchema;
 use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Title\Title;
+use User;
 use Wikimedia\Rdbms\ILoadBalancer;
 
 /**
@@ -69,14 +70,14 @@ class StagingService {
 		$dbw->delete( self::TABLE, $conds, __METHOD__ );
 	}
 
-	public function submitStaged( string $branchName, string $msg ) {
+	public function submitStaged( User $user, string $branchName, string $msg ) {
 		$branchId = LakatArticleMetadata::getBranchId( $branchName );
 		foreach ( $this->getStagedArticles( $branchName ) as $articleName ) {
+			$wikiPage =
+				MediaWikiServices::getInstance()
+					->getWikiPageFactory()
+					->newFromTitle( Title::newFromText( "$branchName/$articleName" ) );
 			try {
-				$wikiPage =
-					MediaWikiServices::getInstance()
-						->getWikiPageFactory()
-						->newFromTitle( Title::newFromText( "$branchName/$articleName" ) );
 				$submitData = LakatArticleMetadata::load( $wikiPage );
 				$bucketRefs = $submitData['bucket_refs'];
 			}
@@ -108,8 +109,10 @@ class StagingService {
 			$publicKey = '';
 			$proof = '';
 
-			LakatStorageRPC::getInstance()
+			$submitData = LakatStorageRPC::getInstance()
 				->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
+			// update page metadata
+			LakatArticleMetadata::save( $wikiPage, $user, $submitData );
 		}
 		$this->unstageAll( $branchName );
 	}
