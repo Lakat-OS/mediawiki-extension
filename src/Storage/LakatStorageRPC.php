@@ -81,14 +81,6 @@ class LakatStorageRPC implements LakatStorageInterface {
 		return $this->rpc( $method, $params );
 	}
 
-	public function submitFirst( string $branchId, string $articleName, string $content ) : string {
-		throw new LogicException( 'Not implemented' );
-	}
-
-	public function submitNext( string $branchId, string $articleId, string $content ) : void {
-		throw new LogicException( 'Not implemented' );
-	}
-
 	public function getArticleFromArticleName( string $branchId, string $name ): string {
 		$method = $this->camelToSnakeCase( __FUNCTION__ );
 		$params = [
