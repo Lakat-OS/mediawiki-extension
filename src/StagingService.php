@@ -22,7 +22,7 @@ use Wikimedia\Rdbms\ILoadBalancer;
 class StagingService {
 	public const SERVICE_NAME = 'LakatStagingService';
 
-	private const TABLE = 'lakat_staging';
+	public const TABLE = 'lakat_staging';
 
 	private ILoadBalancer $loadBalancer;
 
