@@ -200,6 +200,6 @@ class Hooks implements
 	}
 
 	public function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
-		$updater->addExtensionTable( 'lakat_staging', realpath(__DIR__ . '/../sql/20240127_212200_create_article_table.sql') );
+		$updater->addExtensionTable( StagingService::TABLE, realpath(__DIR__ . '/../sql/20240127_212200_create_article_table.sql') );
 	}
 }
