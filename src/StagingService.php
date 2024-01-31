@@ -22,7 +22,7 @@ use Wikimedia\Rdbms\ILoadBalancer;
 class StagingService {
 	public const SERVICE_NAME = 'LakatStagingService';
 
-	private const TABLE = 'lakat_staging';
+	public const TABLE = 'lakat_staging';
 
 	private ILoadBalancer $loadBalancer;
 
@@ -33,7 +33,7 @@ class StagingService {
 	public function getStagedArticles( string $branchName ): array {
 		$dbr = $this->loadBalancer->getConnection( DB_REPLICA );
 		$conds = [ 'la_branch_name' => $branchName ];
-		$res = $dbr->select( 'lakat_article', 'la_name', $conds, __METHOD__ );
+		$res = $dbr->select( self::TABLE, 'la_name', $conds, __METHOD__ );
 		$rows = [];
 		foreach ( $res as $row ) {
 			$rows[] = $row->la_name;
