@@ -40,13 +40,14 @@ class SpecialStaging extends FormSpecialPage {
 		}
 
 		$articles = $this->getStagedArticles( $branchName );
-		$options = array_combine($articles, $articles);
+		$options = array_combine( $articles, $articles );
 
 		return [
 			'articles' => [
 				'type' => 'multiselect',
 				'label-message' => 'staging-modified-articles',
-				'options' => $options
+				'options' => $options,
+				'default' => $articles,
 			],
 			'branch' => [
 				'type' => 'text',
