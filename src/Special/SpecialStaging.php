@@ -5,6 +5,7 @@ namespace MediaWiki\Extension\Lakat\Special;
 use FormSpecialPage;
 use Html;
 use MediaWiki\Extension\Lakat\StagingService;
+use MediaWiki\MediaWikiServices;
 use Status;
 
 class SpecialStaging extends FormSpecialPage {
@@ -33,6 +34,7 @@ class SpecialStaging extends FormSpecialPage {
 			'branch' => [
 				'type' => 'text',
 				'label-message' => 'staging-branch',
+				'default' => $this->getBranchName(),
 				'readonly' => true,
 			],
 			'message' => [
@@ -48,16 +50,17 @@ class SpecialStaging extends FormSpecialPage {
 	protected function postHtml() {
 		$html = Html::element( 'h2', [], $this->msg('staging-modified-articles')->escaped() );
 
-		if ( !$this->par ) {
-			$html .= Html::errorBox( $this->msg('staging-branch-not-specified')->escaped() );
+		$branchName = $this->getBranchName();
+		if ( !$branchName ) {
+			$html .= Html::errorBox( $this->msg( 'staging-branch-not-specified' )->escaped() );
 
 			return $html;
 		}
 
-		$articles = $this->stagingService->getStagedArticles( $this->par );
-		if (!$articles) {
+		$articles = $this->stagingService->getStagedArticles( $branchName );
+		if ( !$articles ) {
+			$html .= Html::noticeBox( $this->msg( 'staging-nothing-staged' )->escaped(), '' );
 
-			$html .= Html::noticeBox( $this->msg('staging-nothing-staged')->escaped(), '' );
 			return $html;
 		}
 
@@ -76,5 +79,15 @@ class SpecialStaging extends FormSpecialPage {
 		$this->stagingService->submitStaged( $this->getUser(), $branch, $message );
 
 		return Status::newGood();
+	}
+
+	private function getBranchName(): string {
+		return $this->par ?: $this->getDefaultBranch();
+	}
+
+	private function getDefaultBranch(): string {
+		$user = $this->getUser();
+		$userOptionsManager = MediaWikiServices::getInstance()->getUserOptionsManager();
+		return $userOptionsManager->getOption( $user, 'lakat-default-branch');
 	}
 }
