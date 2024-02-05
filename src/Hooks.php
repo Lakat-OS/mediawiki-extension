@@ -20,6 +20,7 @@
 namespace MediaWiki\Extension\Lakat;
 
 use Article;
+use DatabaseUpdater;
 use MediaWiki\Extension\Lakat\Domain\BucketRefType;
 use MediaWiki\Extension\Lakat\Domain\BucketSchema;
 use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
@@ -107,7 +108,7 @@ class Hooks implements
 				'class' => false,
 				'text' => $sktemplate->msg( 'lakat-switchbranch' )->text(),
 				'href' => $fullUrl,
-				'title' => $sktemplate->msg( 'lakat-switchbranch-tooltip' )->text()
+				'title' => $sktemplate->msg( 'lakat-switchbranch-tooltip' )->text(),
 			],
 			'createbranch' => [
 				'class' => false,
@@ -126,7 +127,13 @@ class Hooks implements
 				'text' => $sktemplate->msg( 'lakat-token' )->text(),
 				'href' => 'https://another-example.com',
 				'title' => $sktemplate->msg( 'lakat-token-tooltip' )->text(),
-			]
+			],
+			'staging' => [
+				'class' => false,
+				'text' => $sktemplate->msg( 'staging' )->text(),
+				'href' => Title::newFromText('Special:Staging')->getLinkURL(),
+				'title' => $sktemplate->msg( 'staging-summary' )->text(),
+			],
 		];
 	}
 
@@ -177,75 +184,22 @@ class Hooks implements
 			return;
 		}
 
-		// Article is a subpage of a branch page
+		// article is a subpage of a branch page
 		$title = $wikiPage->getTitle();
 		if ($title->isSubpage()) {
-			$branchId = LakatArticleMetadata::getBranchId($title->getRootText());
+			$branchName = $title->getRootText();
 
-			// Save page in remote storage if necessary
-			$blob = $revisionRecord->getContent(SlotRecord::MAIN)->serialize();
-			if ($editResult->isNew()) {
-				// create article on remote storage
-				$contents = [
-					[
-						"data" => $blob,
-						"schema" => BucketSchema::DEFAULT_ATOMIC,
-						"parent_id" => base64_encode(''),
-						"signature" => base64_encode(''),
-						"refs" => []
-					],
-					[
-						"data" => [
-							"order" => [
-								["id" => 0, "type" => BucketRefType::NO_REF]
-							],
-							"name" => $title->getSubpageText()
-						],
-						"schema" => BucketSchema::DEFAULT_MOLECULAR,
-						"parent_id" => base64_encode(''),
-						"signature" => base64_encode(''),
-						"refs" => []
-					]
-				];
-				$publicKey = '';
-				$proof = '';
-				$msg = $summary;
-				$submitData = LakatStorageRPC::getInstance()->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
-				// save page metadata
-				LakatArticleMetadata::save( $wikiPage, $user, $submitData );
-			} else {
-				// get article bucket id from page metadata
-				$submitData = LakatArticleMetadata::load( $wikiPage );
-				$bucketRefs = $submitData['bucket_refs'];
-				// update article on remote storage
-				$contents = [
-					[
-						"data" => $blob,
-						"schema" => BucketSchema::DEFAULT_ATOMIC,
-						"parent_id" => $bucketRefs[0],
-						"signature" => base64_encode( '' ),
-						"refs" => []
-					],
-					[
-						"data" => [
-							"order" => [
-								[ "id" => 0, "type" => BucketRefType::NO_REF ]
-							],
-							"name" => $title->getSubpageText()
-						],
-						"schema" => BucketSchema::DEFAULT_MOLECULAR,
-						"parent_id" => $bucketRefs[1],
-						"signature" => base64_encode( '' ),
-						"refs" => []
-					]
-				];
-				$publicKey = '';
-				$proof = '';
-				$msg = $summary;
-				$submitData = LakatStorageRPC::getInstance()->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
-				// update page metadata
-				LakatArticleMetadata::save( $wikiPage, $user, $submitData );
-			}
+			// ensure branch $branchName exists
+			LakatArticleMetadata::getBranchId( $branchName );
+
+			$articleName = $title->getSubpageText();
+
+			// stage article
+			LakatServices::getStagingService()->stage( $branchName, $articleName );
 		}
+	}
+
+	public function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
+		$updater->addExtensionTable( StagingService::TABLE, realpath(__DIR__ . '/../sql/20240127_212200_create_article_table.sql') );
 	}
 }

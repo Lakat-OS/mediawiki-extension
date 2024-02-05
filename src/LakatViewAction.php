@@ -4,6 +4,7 @@ namespace MediaWiki\Extension\Lakat;
 
 use Exception;
 use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
+use MediaWiki\Html\Html;
 use MediaWiki\Language\RawMessage;
 use ViewAction;
 
@@ -55,11 +56,17 @@ class LakatViewAction extends ViewAction {
 				}
 
 				// Load page from remote storage
-//				$this->getOutput()->clearHTML();
 				$this->getOutput()->addWikiTextAsContent('== Content from remote storage ==');
 
 				$articleName = $title->getSubpageText();
-				$text = LakatStorageRPC::getInstance()->getArticleFromArticleName( $branchId, $articleName );
+				try {
+					$text = LakatStorageRPC::getInstance()->getArticleFromArticleName( $branchId, $articleName );
+				} catch ( Exception $e) {
+					$message = $e->getMessage();
+					$html = ( new RawMessage( $message ) )->escaped();
+					$this->getOutput()->addHTML( HTML::warningBox( $html, '' ) );
+					return;
+				}
 
 				$this->getOutput()->addWikiTextAsContent($text);
 			} catch ( Exception $e) {
