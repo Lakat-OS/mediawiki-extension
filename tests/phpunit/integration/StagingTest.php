@@ -7,8 +7,9 @@ use ContentHandler;
 use FormatJson;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Extension\Lakat\Domain\BranchType;
+use MediaWiki\Extension\Lakat\LakatServices;
 use MediaWiki\Extension\Lakat\StagingService;
-use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
+use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\Http\HttpRequestFactory;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\SlotRecord;
@@ -24,15 +25,17 @@ use User;
 class StagingTest extends MediaWikiIntegrationTestCase {
 	private StagingService $stagingService;
 
+	private LakatStorage $lakatStorage;
+
 	protected function setUp(): void {
 		parent::setUp();
 
 		$services = $this->getServiceContainer();
-		$loadBalancer = $services->getDBLoadBalancer();
-		$this->stagingService = new StagingService( $loadBalancer );
+
+		$this->stagingService = LakatServices::getStagingService( $services );
+		$this->lakatStorage = LakatServices::getLakatStorage( $services );
 
 		// use HttpRequestFactory instead of NullHttpRequestFactory to test RPC calls
-		$services = MediaWikiServices::getInstance();
 		$services->resetServiceForTesting('HttpRequestFactory');
 		$services->redefineService(
 			'HttpRequestFactory',
@@ -81,10 +84,10 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 		$signature = '';
 		$acceptConflicts = true;
 		$msg = 'Test create genesis branch';
-		$branchId = LakatStorageRPC::getInstance()->createGenesisBranch( $branchType, $branchName, $signature, $acceptConflicts, $msg);
+		$branchId = $this->lakatStorage->createGenesisBranch( $branchType, $branchName, $signature, $acceptConflicts, $msg);
 
 		// fetch branch data from remote
-		$data = LakatStorageRPC::getInstance()->getBranchDataFromBranchId( $branchId, false );
+		$data = $this->lakatStorage->getBranchDataFromBranchId( $branchId, false );
 
 		// create branch page
 		$title = Title::newFromText( $branchName );

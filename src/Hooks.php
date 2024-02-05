@@ -23,7 +23,7 @@ use Article;
 use DatabaseUpdater;
 use MediaWiki\Extension\Lakat\Domain\BucketRefType;
 use MediaWiki\Extension\Lakat\Domain\BucketSchema;
-use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
+use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\Hook\BeforePageDisplayHook;
 use MediaWiki\Hook\MediaWikiServicesHook;
 use MediaWiki\Hook\SkinTemplateNavigation__UniversalHook;

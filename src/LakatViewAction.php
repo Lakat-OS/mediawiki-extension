@@ -3,9 +3,10 @@
 namespace MediaWiki\Extension\Lakat;
 
 use Exception;
-use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
+use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\Html\Html;
 use MediaWiki\Language\RawMessage;
+use MediaWiki\MediaWikiServices;
 use ViewAction;
 
 class LakatViewAction extends ViewAction {
@@ -60,7 +61,7 @@ class LakatViewAction extends ViewAction {
 
 				$articleName = $title->getSubpageText();
 				try {
-					$text = LakatStorageRPC::getInstance()->getArticleFromArticleName( $branchId, $articleName );
+					$text = LakatServices::getLakatStorage()->getArticleFromArticleName( $branchId, $articleName );
 				} catch ( Exception $e) {
 					$message = $e->getMessage();
 					$html = ( new RawMessage( $message ) )->escaped();

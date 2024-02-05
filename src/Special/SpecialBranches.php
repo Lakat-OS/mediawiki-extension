@@ -3,13 +3,17 @@
 namespace MediaWiki\Extension\Lakat\Special;
 
 use Html;
-use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
+use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use SpecialPage;
 use Title;
 
 class SpecialBranches extends SpecialPage {
-	public function __construct() {
+	private LakatStorage $lakatStorage;
+
+	public function __construct( LakatStorage $lakatStorage ) {
 		parent::__construct( 'Branches' );
+
+		$this->lakatStorage = $lakatStorage;
 	}
 
 	protected function getGroupName() {
@@ -19,7 +23,7 @@ class SpecialBranches extends SpecialPage {
 	public function execute( $subPage ) {
 		parent::execute( $subPage );
 
-		$branchIds = LakatStorageRPC::getInstance()->getLocalBranches();
+		$branchIds = $this->lakatStorage->getLocalBranches();
 		if (!$branchIds) {
 			return;
 		}
@@ -27,7 +31,7 @@ class SpecialBranches extends SpecialPage {
 		$html = Html::openElement( 'ul' );
 		$linkRenderer = $this->getLinkRenderer();
 		foreach ($branchIds as $branchId) {
-			$branchName = LakatStorageRPC::getInstance()->getBranchNameFromBranchId($branchId);
+			$branchName = $this->lakatStorage->getBranchNameFromBranchId($branchId);
 			$title = Title::newFromText( $branchName );
 			if ($title->isKnown()) {
 				$link = $linkRenderer->makeKnownLink( $title );

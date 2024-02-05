@@ -5,14 +5,20 @@ namespace MediaWiki\Extension\Lakat\Special;
 use Exception;
 use FormSpecialPage;
 use MediaWiki\Extension\Lakat\Domain\BranchType;
-use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
+use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\User\UserOptionsManager;
 use Status;
 use Title;
 
 class SpecialCreateBranch extends FormSpecialPage {
-	public function __construct() {
+	private LakatStorage $lakatStorage;
+
+	public function __construct( LakatStorage $lakatStorage, UserOptionsManager $userOptionsManager ) {
 		parent::__construct( 'CreateBranch' );
+
+		$this->lakatStorage = $lakatStorage;
+		$this->userOptionsManager = $userOptionsManager;
 	}
 
 	protected function getGroupName() {
@@ -71,7 +77,7 @@ class SpecialCreateBranch extends FormSpecialPage {
 			$signature = $data['Token'];
 			$acceptConflicts = $data['AllowConflicts'];
 			$msg = 'Genesis submit';
-			$branchId = LakatStorageRPC::getInstance()->createGenesisBranch( $branchType, $branchName, $signature, $acceptConflicts, $msg);
+			$branchId = $this->lakatStorage->createGenesisBranch( $branchType, $branchName, $signature, $acceptConflicts, $msg);
 		} catch ( Exception $e ) {
 			return Status::newFatal( 'createbranch-error-remote' );
 		}
@@ -86,8 +92,7 @@ class SpecialCreateBranch extends FormSpecialPage {
 
 	private function setDefaultBranch( string $branchName ): void {
 		$user = $this->getUser();
-		$userOptionsManager = MediaWikiServices::getInstance()->getUserOptionsManager();
-		$userOptionsManager->setOption( $user, 'lakat-default-branch', $branchName );
-		$userOptionsManager->saveOptions( $user );
+		$this->userOptionsManager->setOption( $user, 'lakat-default-branch', $branchName );
+		$this->userOptionsManager->saveOptions( $user );
 	}
 }

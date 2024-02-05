@@ -5,7 +5,7 @@ namespace MediaWiki\Extension\Lakat;
 use Exception;
 use MediaWiki\Extension\Lakat\Domain\BucketRefType;
 use MediaWiki\Extension\Lakat\Domain\BucketSchema;
-use MediaWiki\Extension\Lakat\Storage\LakatStorageRPC;
+use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Title\Title;
 use User;
@@ -26,8 +26,11 @@ class StagingService {
 
 	private ILoadBalancer $loadBalancer;
 
-	public function __construct( ILoadBalancer $loadBalancer ) {
+	private LakatStorage $lakatStorage;
+
+	public function __construct( ILoadBalancer $loadBalancer, LakatStorage $lakatStorage ) {
 		$this->loadBalancer = $loadBalancer;
+		$this->lakatStorage = $lakatStorage;
 	}
 
 	public function getStagedArticles( string $branchName ): array {
@@ -107,8 +110,7 @@ class StagingService {
 			$publicKey = '';
 			$proof = '';
 
-			$submitData = LakatStorageRPC::getInstance()
-				->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
+			$submitData = $this->lakatStorage->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
 			// update page metadata
 			LakatArticleMetadata::save( $wikiPage, $user, $submitData );
 		}

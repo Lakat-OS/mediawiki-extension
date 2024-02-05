@@ -3,43 +3,39 @@
 namespace MediaWiki\Extension\Lakat\Storage;
 
 use Exception;
-use LogicException;
 use MediaWiki\Http\HttpRequestFactory;
-use MediaWiki\Logger\LoggerFactory;
-use MediaWiki\MediaWikiServices;
 use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use Status;
 use Wikimedia\UUID\GlobalIdGenerator;
 
-class LakatStorageRPC implements LakatStorageInterface {
+class LakatStorage implements LakatStorageInterface {
 	use LoggerAwareTrait;
 
-	private static LakatStorageRPC $instance;
+	public const SERVICE_NAME = 'LakatStorage';
 
-	private string $url;
+	private string $rpcUrl;
 
 	private GlobalIdGenerator $globalIdGenerator;
 	private HttpRequestFactory $httpRequestFactory;
 
-	public static function getInstance() : LakatStorageRPC {
-		if ( !isset( self::$instance ) ) {
-			self::$instance = new self;
-		}
+	public function __construct(
+		string $rpcUrl,
+		LoggerInterface $logger,
+		GlobalIdGenerator $globalIdGenerator,
+		HttpRequestFactory $httpRequestFactory
+	) {
+		$this->rpcUrl = $rpcUrl;
 
-		return self::$instance;
+		$this->setLogger( $logger );
+
+		$this->globalIdGenerator = $globalIdGenerator;
+		$this->httpRequestFactory = $httpRequestFactory;
 	}
 
-	public function __construct() {
-		$this->setLogger( LoggerFactory::getInstance( 'lakat-rpc' ) );
-
-		$config = MediaWikiServices::getInstance()->getConfigFactory()->makeConfig( 'lakat' );
-		$this->url = $config->get( 'LakatRpcUrl' );
-
-		$this->globalIdGenerator = MediaWikiServices::getInstance()->getGlobalIdGenerator();
-		$this->httpRequestFactory = MediaWikiServices::getInstance()->getHttpRequestFactory();
-	}
-
-	public function createGenesisBranch( int $branchType, string $name, string $signature, bool $acceptConflicts, string $msg ) : string {
+	public function createGenesisBranch(
+		int $branchType, string $name, string $signature, bool $acceptConflicts, string $msg
+	): string {
 		$method = $this->camelToSnakeCase( __FUNCTION__ );
 		$params = [
 			$branchType,
@@ -48,36 +44,43 @@ class LakatStorageRPC implements LakatStorageInterface {
 			$acceptConflicts,
 			$msg,
 		];
+
 		return $this->rpc( $method, $params );
 	}
 
-	public function getBranchNameFromBranchId( string $branchId ) : string {
+	public function getBranchNameFromBranchId( string $branchId ): string {
 		$method = $this->camelToSnakeCase( __FUNCTION__ );
 		$params = [ $branchId ];
+
 		return $this->rpc( $method, $params );
 	}
 
 	public function getBranchDataFromBranchId( string $branchId, bool $deserializeBuckets ): array {
 		$method = $this->camelToSnakeCase( __FUNCTION__ );
 		$params = func_get_args();
+
 		return $this->rpc( $method, $params );
 	}
 
-	public function getLocalBranches() : array {
+	public function getLocalBranches(): array {
 		$method = $this->camelToSnakeCase( __FUNCTION__ );
 		$params = [];
+
 		return $this->rpc( $method, $params );
 	}
 
-	public function submitContentToTwig( string $branchId, array $contents, string $publicKey, string $proof, string $msg ) : array {
+	public function submitContentToTwig(
+		string $branchId, array $contents, string $publicKey, string $proof, string $msg
+	): array {
 		$method = $this->camelToSnakeCase( __FUNCTION__ );
 		$params = [
 			$branchId,
 			$contents,
 			$publicKey,
 			$proof,
-			$msg
+			$msg,
 		];
+
 		return $this->rpc( $method, $params );
 	}
 
@@ -85,9 +88,10 @@ class LakatStorageRPC implements LakatStorageInterface {
 		$method = $this->camelToSnakeCase( __FUNCTION__ );
 		$params = [
 			$branchId,
-			$name
+			$name,
 		];
-		return $this->rpc($method, $params);
+
+		return $this->rpc( $method, $params );
 	}
 
 	private function rpc( string $method, array $params = [] ) {
@@ -104,7 +108,7 @@ class LakatStorageRPC implements LakatStorageInterface {
 			'method' => 'POST',
 			'postData' => json_encode( $data ),
 		];
-		$request = $this->httpRequestFactory->create( $this->url, $options );
+		$request = $this->httpRequestFactory->create( $this->rpcUrl, $options );
 		$request->setHeader( 'Content-Type', 'application/json; charset=utf-8' );
 		$status = $request->execute();
 		if ( !$status->isOK() ) {
@@ -143,7 +147,7 @@ class LakatStorageRPC implements LakatStorageInterface {
 		return $response['result'];
 	}
 
-	private function camelToSnakeCase( string $str ) : string {
+	private function camelToSnakeCase( string $str ): string {
 		return strtolower( preg_replace( '/[A-Z]/', '_$0', $str ) );
 	}
 }
