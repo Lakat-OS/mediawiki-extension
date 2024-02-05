@@ -33,9 +33,12 @@ class StagingService {
 		$this->lakatStorage = $lakatStorage;
 	}
 
-	public function getStagedArticles( string $branchName ): array {
+	public function getStagedArticles( string $branchName, array $filterArticles = null ): array {
 		$dbr = $this->loadBalancer->getConnection( DB_REPLICA );
 		$conds = [ 'la_branch_name' => $branchName ];
+		if ($filterArticles !== null) {
+			$conds['la_name'] = $filterArticles;
+		}
 		$res = $dbr->select( self::TABLE, 'la_name', $conds, __METHOD__ );
 		$rows = [];
 		foreach ( $res as $row ) {
@@ -54,7 +57,7 @@ class StagingService {
 		$dbw->insert( self::TABLE, $row, __METHOD__ );
 	}
 
-	public function unstage( string $branchName, string $articleName ): void {
+	public function unstage( string $branchName, string $articleName): void {
 		$conds = [
 			'la_branch_name' => $branchName,
 			'la_name' => $articleName,
@@ -63,17 +66,9 @@ class StagingService {
 		$dbw->delete( self::TABLE, $conds, __METHOD__ );
 	}
 
-	public function unstageAll( string $branchName ): void {
-		$conds = [
-			'la_branch_name' => $branchName,
-		];
-		$dbw = $this->loadBalancer->getConnection( DB_PRIMARY );
-		$dbw->delete( self::TABLE, $conds, __METHOD__ );
-	}
-
-	public function submitStaged( User $user, string $branchName, string $msg ) {
+	public function submitStaged( User $user, string $branchName, array $articles, string $msg ) {
 		$branchId = LakatArticleMetadata::getBranchId( $branchName );
-		foreach ( $this->getStagedArticles( $branchName ) as $articleName ) {
+		foreach ( $this->getStagedArticles( $branchName, $articles ) as $articleName ) {
 			$wikiPage =
 				MediaWikiServices::getInstance()
 					->getWikiPageFactory()
@@ -113,7 +108,8 @@ class StagingService {
 			$submitData = $this->lakatStorage->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
 			// update page metadata
 			LakatArticleMetadata::save( $wikiPage, $user, $submitData );
+
+			$this->unstage( $branchName, $articleName );
 		}
-		$this->unstageAll( $branchName );
 	}
 }

@@ -39,7 +39,7 @@
 	"staging-summary": "Submit changes",
 	"staging-branch": "Branch:",
 	"staging-message": "Message:",
-	"staging-modified-articles": "Modified articles",
+	"staging-modified-articles": "Modified articles:",
 	"staging-branch-not-specified": "Branch not specified",
 	"staging-nothing-staged": "No changed articles in this branch, nothing to submit",
 
