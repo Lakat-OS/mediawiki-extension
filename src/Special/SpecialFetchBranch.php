@@ -65,8 +65,9 @@ class SpecialFetchBranch extends RedirectSpecialArticle {
 		$comment = CommentStoreComment::newUnsavedComment(
 			wfMessage( 'createbranch-revision-comment' )->inContentLanguage()->text()
 		);
+		$text = "Articles in this branch:\n\n{{Special:PrefixIndex/{{FULLPAGENAME}}/ | stripprefix=1}}";
 		$page->newPageUpdater( $this->getUser() )
-			->setContent( SlotRecord::MAIN, ContentHandler::makeContent('Branch root page', $title) )
+			->setContent( SlotRecord::MAIN, ContentHandler::makeContent( $text, $title) )
 			->setContent( 'lakat', $content )
 			->saveRevision( $comment );
 
