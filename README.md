@@ -5,7 +5,7 @@
 [Dependency injection in MediaWiki](https://www.mediawiki.org/wiki/Dependency_Injection) is implemented in service container class `MediaWikiServices`. It is responsible for creation of all service classes, including those from extensions.
 
 To find out what services are defined in Lakat extension look at following files:
-* [ServiceWiring.php](./ServiceWiring.php) - defines how services are created by mapping service names to instantiation callbacks
+* [ServiceWiring.php](./src/ServiceWiring.php) - defines how services are created by mapping service names to instantiation callbacks
 * [LakatServices.php](./src/LakatServices.php) - defines static functions for easy access to service, e.g. `LakatServices::getStagingService()`
 
 Constructor parameter is the recommended best practice to inject service in your class and should be used instead of direct instantiation when possible, e.g.:
