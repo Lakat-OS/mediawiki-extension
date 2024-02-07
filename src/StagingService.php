@@ -8,6 +8,7 @@ use MediaWiki\Extension\Lakat\Domain\BucketSchema;
 use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Title\Title;
+use Status;
 use User;
 use Wikimedia\Rdbms\ILoadBalancer;
 
@@ -54,7 +55,7 @@ class StagingService {
 			'la_name' => $articleName,
 		];
 		$dbw = $this->loadBalancer->getConnection( DB_PRIMARY );
-		$dbw->insert( self::TABLE, $row, __METHOD__ );
+		$dbw->insert( self::TABLE, $row, __METHOD__, [ 'IGNORE' ] );
 	}
 
 	public function unstage( string $branchName, string $articleName): void {
@@ -110,6 +111,42 @@ class StagingService {
 			LakatArticleMetadata::save( $wikiPage, $user, $submitData );
 
 			$this->unstage( $branchName, $articleName );
+		}
+	}
+
+	/**
+	 * @param User $user
+	 * @param string $branchName
+	 * @param string $articleName
+	 * @return void
+	 * @throws Exception
+	 */
+	public function reset( User $user, string $branchName, string $articleName ) {
+		$page =
+			MediaWikiServices::getInstance()
+				->getWikiPageFactory()
+				->newFromTitle( Title::newFromText( "$branchName/$articleName" ) );
+
+		$deletePageFactory = MediaWikiServices::getInstance()->getDeletePageFactory();
+		$deletePage = $deletePageFactory->newDeletePage( $page, $user );
+		$status = $deletePage->deleteUnsafe( 'Lakat staging reset' );
+		if ( !$status->isOK() ) {
+			throw new Exception( 'Failed to delete page: ' . Status::wrap( $status )->getWikiText() );
+		}
+
+		$this->unstage( $branchName, $articleName );
+	}
+
+	/**
+	 * @param User $user
+	 * @param string $branch
+	 * @param array $articles
+	 * @return void
+	 * @throws Exception
+	 */
+	public function resetStaged( User $user, string $branch, array $articles ) {
+		foreach ( $articles as $article ) {
+			$this->reset( $user, $branch, $article );
 		}
 	}
 }

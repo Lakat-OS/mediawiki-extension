@@ -4,6 +4,7 @@ namespace MediaWiki\Extension\Lakat\Special;
 
 use FormSpecialPage;
 use Html;
+use HTMLForm;
 use MediaWiki\Extension\Lakat\StagingService;
 use MediaWiki\MediaWikiServices;
 use Status;
@@ -76,11 +77,34 @@ class SpecialStaging extends FormSpecialPage {
 		return '';
 	}
 
+	protected function alterForm( HTMLForm $form ) {
+		$form->addButton( [
+			'name' => 'reset',
+			'value' => 'reset',
+			'label-message' => 'staging-label-reset',
+			'flags' => [ 'destructive' ],
+		] );
+	}
+
 	public function onSubmit( array $data ) {
 		$articles = $data['articles'];
 		$branch = $data['branch'];
 		$message = $data['message'];
-		$this->stagingService->submitStaged( $this->getUser(), $branch, $articles, $message );
+
+		$shouldReset = (bool)$this->getRequest()->getVal( 'reset' );
+		if ( $shouldReset ) {
+			try {
+				$this->stagingService->resetStaged( $this->getUser(), $branch, $articles );
+			} catch ( \Exception $e ) {
+				return Status::newFatal( 'Failed to reset articles: ' . $e->getMessage() );
+			}
+		} else {
+			try {
+				$this->stagingService->submitStaged( $this->getUser(), $branch, $articles, $message );
+			} catch ( \Exception $e ) {
+				return Status::newFatal( 'Failed to submit articles: ' . $e->getMessage() );
+			}
+		}
 
 		return Status::newGood();
 	}
