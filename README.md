@@ -25,7 +25,7 @@ class SomeClass {
 
 ### StagingService
 
-The service controls what articles are currently modified relatively to the last submit to Lakat storage.
+`StagingService` controls what articles are currently modified relatively to the last submit to Lakat storage.
 Internally service keeps track of modified articles in SQL table `lakat_staging`.
 
 #### Usage
