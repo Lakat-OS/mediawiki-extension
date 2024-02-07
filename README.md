@@ -1,4 +1,19 @@
+## Installation
+
+* Download and move Lakat extension files to `extensions/Lakat` directory in your MediaWiki installation.
+
+* Add the following code at the bottom of your `LocalSettings.php` file:
+  ```php
+  wfLoadExtension( 'Lakat' );
+  ```
+
+* Run the [update script](https://www.mediawiki.org/wiki/Manual:Update.php) which will automatically create necessary database tables that this extension needs.
+
 ## Development
+
+### Database
+
+SQL files to create necessary tables can be found in `sql/` subdirectory. Run [update script](https://www.mediawiki.org/wiki/Manual:Update.php) when database schema update is necessary.
 
 ### Service container
 
