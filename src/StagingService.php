@@ -33,6 +33,13 @@ class StagingService {
 		$this->lakatStorage = $lakatStorage;
 	}
 
+	/**
+	 * Retrieve a list of modified articles in the given branch, optionally filtered.
+	 *
+	 * @param string $branchName
+	 * @param array|null $filterArticles Optionally filter articles by name
+	 * @return string[] List of article names
+	 */
 	public function getStagedArticles( string $branchName, array $filterArticles = null ): array {
 		$dbr = $this->loadBalancer->getConnection( DB_REPLICA );
 		$conds = [ 'la_branch_name' => $branchName ];
@@ -48,6 +55,13 @@ class StagingService {
 		return $rows;
 	}
 
+	/**
+	 * Add article to the list of modified articles
+	 *
+	 * @param string $branchName
+	 * @param string $articleName
+	 * @return void
+	 */
 	public function stage( string $branchName, string $articleName ) {
 		$row = [
 			'la_branch_name' => $branchName,
@@ -57,6 +71,13 @@ class StagingService {
 		$dbw->insert( self::TABLE, $row, __METHOD__ );
 	}
 
+	/**
+	 * Remove article from the list of modified articles
+	 *
+	 * @param string $branchName
+	 * @param string $articleName
+	 * @return void
+	 */
 	public function unstage( string $branchName, string $articleName): void {
 		$conds = [
 			'la_branch_name' => $branchName,
@@ -66,6 +87,16 @@ class StagingService {
 		$dbw->delete( self::TABLE, $conds, __METHOD__ );
 	}
 
+	/**
+	 * Submit selected articles to Lakat
+	 *
+	 * @param User $user
+	 * @param string $branchName
+	 * @param array $articles
+	 * @param string $msg
+	 * @return void
+	 * @throws Exception
+	 */
 	public function submitStaged( User $user, string $branchName, array $articles, string $msg ) {
 		$branchId = LakatArticleMetadata::getBranchId( $branchName );
 		foreach ( $this->getStagedArticles( $branchName, $articles ) as $articleName ) {

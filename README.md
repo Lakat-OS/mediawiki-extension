@@ -1,22 +1,33 @@
-This is a blank extension template. It doesn't really do anything on its own.
-It is intended to provide a boiler template for an actual MediaWiki extension.
+## Development
 
-If you are checking this out from Git and intend to use it, you may use the
-following commands to make a clean directory of just this template without the
-Git meta-data and other examples.
+### StagingService
 
-	cd extensions
-	git clone https://gerrit.wikimedia.org/r/mediawiki/extensions/Lakat.git
-	cp -r Lakat ./MyExtension
-	rm -rf ./MyExtension/.git
+The service controls what articles are currently modified relatively to the last submit to Lakat storage.
+Internally service keeps track of modified articles in SQL table `lakat_staging`.
 
-This automates the recommended code checkers for PHP and JavaScript code in Wikimedia projects
-(see https://www.mediawiki.org/wiki/Continuous_integration/Entry_points).
-To take advantage of this automation.
+#### Usage
 
-1. install nodejs, npm, and PHP composer
-2. change to the extension's directory
-3. `npm install`
-4. `composer install`
+`StagingService` is registered in [MediaWiki's service container](https://www.mediawiki.org/wiki/Dependency_Injection) and should be instantiated like any other MediaWiki service using parameter in constructor:
 
-Once set up, running `npm test` and `composer test` will run automated code checks.
+```php
+class SomeClass {
+    private StagingService $stagingService;
+
+    public function __construct(StagingService $stagingService) {
+        $this->stagingService = $stagingService;
+    }
+
+    public function someMethod() {
+        $this->stagingService->getStagedArticles( 'SomeBranch' );
+    }
+}
+```
+
+#### Methods
+
+* `getStagedArticles` - retrieve list of modified articles
+* `stage` - add articles to the list of modified articles
+* `unstage` - remove article from the list of modified articles
+* `submitStaged` - submit selected articles to Lakat
+
+
