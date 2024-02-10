@@ -6,6 +6,7 @@ use FormSpecialPage;
 use Html;
 use HTMLForm;
 use MediaWiki\Extension\Lakat\StagingService;
+use MediaWiki\Title\Title;
 use MediaWiki\User\UserOptionsManager;
 use Status;
 
@@ -44,7 +45,12 @@ class SpecialStaging extends FormSpecialPage {
 		}
 
 		$articles = $this->getStagedArticles( $branchName );
-		$options = array_combine( $articles, $articles );
+		$links = array_map( function ( $article ) use ( $branchName ) {
+			return HTML::element( 'a',
+				[ 'href' => Title::newFromText( "$branchName/$article" )->getLocalURL() ],
+				$article );
+		}, $articles );
+		$options = array_combine( $links, $articles );
 
 		return [
 			'articles' => [
