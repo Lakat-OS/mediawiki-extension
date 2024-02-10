@@ -48,6 +48,10 @@ class StagingService {
 		return $rows;
 	}
 
+	public function isStaged( string $branchName, string $articleName ): bool {
+		return (bool)$this->getStagedArticles( $branchName, [ $articleName ] );
+	}
+
 	public function stage( string $branchName, string $articleName ) {
 		$row = [
 			'la_branch_name' => $branchName,

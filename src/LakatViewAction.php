@@ -3,10 +3,8 @@
 namespace MediaWiki\Extension\Lakat;
 
 use Exception;
-use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\Html\Html;
 use MediaWiki\Language\RawMessage;
-use MediaWiki\MediaWikiServices;
 use ViewAction;
 
 class LakatViewAction extends ViewAction {
@@ -14,17 +12,27 @@ class LakatViewAction extends ViewAction {
 	 * Here we replace content of the page with content fetched from lakat storage
 	 */
 	public function show() {
+		$title = $this->getTitle();
+		if ( !$title->isSubpage() ) {
+			// article must be a subpage of a branch page
+			return;
+		}
+
+		$branchName = $title->getRootText();
+		$articleName = $title->getSubpageText();
+
+		if (LakatServices::getStagingService()->isStaged( $branchName, $articleName )) {
+			$this->getOutput()->addHTML( HTML::warningBox( $this->msg('staging-article-modified') ) );
+		}
+
 		parent::show();
 
-		// Article is a subpage of a branch page
-		$title = $this->getTitle();
-		if ( $title->isSubpage() ) {
-			try {
-				$branchId = LakatArticleMetadata::getBranchId( $title->getRootText() );
+		try {
+			$branchId = LakatArticleMetadata::getBranchId( $title->getRootText() );
 
-				// if article doesn't exist locally, we need to check remote storage
-				if (!$title->exists()) {
-					return;	// ignore for now
+			// if article doesn't exist locally, we need to check remote storage
+			if (!$title->exists()) {
+				return;	// ignore for now
 //					$articleId = LakatStorageStub::getInstance()->findArticleIdByName($branchId, $title->getSubpageText());
 //					if (!$articleId) {
 //						// article with this name doesn't exist remotely, skip to usual mediawiki processing
@@ -54,27 +62,24 @@ class LakatViewAction extends ViewAction {
 //					// redirect to the newly created page
 //					$this->getOutput()->redirect($title->getLocalURL());
 //					return;
-				}
+			}
 
-				// Load page from remote storage
-				$this->getOutput()->addWikiTextAsContent('== Content from remote storage ==');
+			// Load page from remote storage
+			$this->getOutput()->addWikiTextAsContent('== Content from remote storage ==');
 
-				$articleName = $title->getSubpageText();
-				try {
-					$text = LakatServices::getLakatStorage()->getArticleFromArticleName( $branchId, $articleName );
-				} catch ( Exception $e) {
-					$message = $e->getMessage();
-					$html = ( new RawMessage( $message ) )->escaped();
-					$this->getOutput()->addHTML( HTML::warningBox( $html, '' ) );
-					return;
-				}
-
-				$this->getOutput()->addWikiTextAsContent($text);
+			try {
+				$text = LakatServices::getLakatStorage()->getArticleFromArticleName( $branchId, $articleName );
 			} catch ( Exception $e) {
-				$this->getOutput()->showFatalError( new RawMessage($e->getMessage()) );
+				$message = $e->getMessage();
+				$html = ( new RawMessage( $message ) )->escaped();
+				$this->getOutput()->addHTML( HTML::warningBox( $html, '' ) );
 				return;
 			}
 
+			$this->getOutput()->addWikiTextAsContent($text);
+		} catch ( Exception $e) {
+			$this->getOutput()->showFatalError( new RawMessage($e->getMessage()) );
+			return;
 		}
 	}
 }

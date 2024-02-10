@@ -42,6 +42,7 @@
 	"staging-modified-articles": "Modified articles:",
 	"staging-branch-not-specified": "Branch not specified",
 	"staging-nothing-staged": "No changed articles in this branch, nothing to submit",
+	"staging-article-modified": "Article content is modified. Go to [[Special:Staging]] to submit.",
 
 	"prefs-lakat": "Lakat",
 	"prefs-options": "Options",
