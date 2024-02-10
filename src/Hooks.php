@@ -21,13 +21,10 @@ namespace MediaWiki\Extension\Lakat;
 
 use Article;
 use DatabaseUpdater;
-use MediaWiki\Extension\Lakat\Domain\BucketRefType;
-use MediaWiki\Extension\Lakat\Domain\BucketSchema;
-use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\Hook\BeforePageDisplayHook;
 use MediaWiki\Hook\MediaWikiServicesHook;
 use MediaWiki\Hook\SkinTemplateNavigation__UniversalHook;
-use MediaWiki\Revision\SlotRecord;
+use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\SlotRoleRegistry;
 use MediaWiki\Storage\Hook\PageSaveCompleteHook;
 use MediaWiki\Title\Title;
@@ -195,7 +192,9 @@ class Hooks implements
 			$articleName = $title->getSubpageText();
 
 			// stage article
-			LakatServices::getStagingService()->stage( $branchName, $articleName );
+			$revisionStore = MediaWikiServices::getInstance()->getRevisionStore();
+			$prevRevId = $revisionStore->getPreviousRevision( $revisionRecord )?->getId();
+			LakatServices::getStagingService()->stage( $branchName, $articleName, $prevRevId );
 		}
 	}
 
