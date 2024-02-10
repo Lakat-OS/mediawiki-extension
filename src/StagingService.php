@@ -2,11 +2,15 @@
 
 namespace MediaWiki\Extension\Lakat;
 
+use CommentStoreComment;
+use ContentHandler;
 use Exception;
 use MediaWiki\Extension\Lakat\Domain\BucketRefType;
 use MediaWiki\Extension\Lakat\Domain\BucketSchema;
 use MediaWiki\Extension\Lakat\Storage\LakatStorage;
-use MediaWiki\MediaWikiServices;
+use MediaWiki\Page\DeletePageFactory;
+use MediaWiki\Page\WikiPageFactory;
+use MediaWiki\Revision\SlotRecord;
 use MediaWiki\Title\Title;
 use Status;
 use User;
@@ -29,9 +33,20 @@ class StagingService {
 
 	private LakatStorage $lakatStorage;
 
-	public function __construct( ILoadBalancer $loadBalancer, LakatStorage $lakatStorage ) {
+	private WikiPageFactory $wikiPageFactory;
+
+	private DeletePageFactory $deletePageFactory;
+
+	public function __construct(
+		ILoadBalancer $loadBalancer,
+		LakatStorage $lakatStorage,
+		WikiPageFactory $wikiPageFactory,
+		DeletePageFactory $deletePageFactory
+	) {
 		$this->loadBalancer = $loadBalancer;
 		$this->lakatStorage = $lakatStorage;
+		$this->wikiPageFactory = $wikiPageFactory;
+		$this->deletePageFactory = $deletePageFactory;
 	}
 
 	public function getStagedArticles( string $branchName, array $filterArticles = null ): array {
@@ -70,10 +85,7 @@ class StagingService {
 	public function submitStaged( User $user, string $branchName, array $articles, string $msg ) {
 		$branchId = LakatArticleMetadata::getBranchId( $branchName );
 		foreach ( $this->getStagedArticles( $branchName, $articles ) as $articleName ) {
-			$wikiPage =
-				MediaWikiServices::getInstance()
-					->getWikiPageFactory()
-					->newFromTitle( Title::newFromText( "$branchName/$articleName" ) );
+			$wikiPage = $this->wikiPageFactory->newFromTitle( Title::newFromText( "$branchName/$articleName" ) );
 			try {
 				$submitData = LakatArticleMetadata::load( $wikiPage );
 				$bucketRefs = $submitData['bucket_refs'];
@@ -115,6 +127,8 @@ class StagingService {
 	}
 
 	/**
+	 * Reset modified article to the state stored in Lakat storage
+	 *
 	 * @param User $user
 	 * @param string $branchName
 	 * @param string $articleName
@@ -122,18 +136,38 @@ class StagingService {
 	 * @throws Exception
 	 */
 	public function reset( User $user, string $branchName, string $articleName ) {
-		$page =
-			MediaWikiServices::getInstance()
-				->getWikiPageFactory()
-				->newFromTitle( Title::newFromText( "$branchName/$articleName" ) );
+		$page = $this->wikiPageFactory->newFromTitle( Title::newFromText( "$branchName/$articleName" ) );
 
-		$deletePageFactory = MediaWikiServices::getInstance()->getDeletePageFactory();
-		$deletePage = $deletePageFactory->newDeletePage( $page, $user );
-		$status = $deletePage->deleteUnsafe( 'Lakat staging reset' );
-		if ( !$status->isOK() ) {
-			throw new Exception( 'Failed to delete page: ' . Status::wrap( $status )->getWikiText() );
+		$branchId = LakatArticleMetadata::getBranchId( $branchName );
+		$text = null;
+		try {
+			$text = $this->lakatStorage->getArticleFromArticleName( $branchId, $articleName );
+		} catch ( Exception $e ) {
+			// here we assume article doesn't exist on Lakat,
+			// but it would be better to use more specific exception
 		}
 
+		if ($text === null) {
+			// article doesn't exist on Lakat - delete page
+			$deletePage = $this->deletePageFactory->newDeletePage( $page, $user );
+			$message = wfMessage( 'staging-reset-comment' )->inContentLanguage()->text();
+			$status = $deletePage->deleteUnsafe( $message );
+			if ( !$status->isOK() ) {
+				throw new Exception( 'Failed to delete page: ' . Status::wrap( $status )->getWikiText() );
+			}
+		} else {
+			// store article text in page - update page
+			$content = ContentHandler::makeContent( $text, $page->getTitle() );
+			$message = wfMessage( 'staging-reset-comment' )->inContentLanguage()->text();
+			$comment = CommentStoreComment::newUnsavedComment( $message );
+			$pageUpdater = $page->newPageUpdater( $user )->setContent( SlotRecord::MAIN, $content );
+			$pageUpdater->saveRevision( $comment );
+			if ( !$pageUpdater->wasSuccessful() ) {
+				throw new Exception( 'Failed to update page: ' . $pageUpdater->getStatus()->getWikiText() );
+			}
+		}
+
+		// now article is in sync with Lakat storage, unstage it
 		$this->unstage( $branchName, $articleName );
 	}
 

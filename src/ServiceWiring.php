@@ -18,7 +18,9 @@ return [
 	StagingService::SERVICE_NAME => static function ( MediaWikiServices $services ): StagingService {
 		return new StagingService(
 			$services->getDBLoadBalancer(),
-			LakatServices::getLakatStorage( $services )
+			LakatServices::getLakatStorage( $services ),
+			$services->getWikiPageFactory(),
+			$services->getDeletePageFactory()
 		);
 	},
 ];
