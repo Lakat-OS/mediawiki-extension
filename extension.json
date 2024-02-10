@@ -62,7 +62,7 @@
 		},
 		"Staging": {
 			"class": "MediaWiki\\Extension\\Lakat\\Special\\SpecialStaging",
-			"services": [ "LakatStagingService" ]
+			"services": [ "LakatStagingService", "UserOptionsManager" ]
 		}
 	},
 	"ServiceWiringFiles": [

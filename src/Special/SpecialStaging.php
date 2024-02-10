@@ -6,20 +6,23 @@ use FormSpecialPage;
 use Html;
 use HTMLForm;
 use MediaWiki\Extension\Lakat\StagingService;
-use MediaWiki\MediaWikiServices;
+use MediaWiki\User\UserOptionsManager;
 use Status;
 
 class SpecialStaging extends FormSpecialPage {
 	private StagingService $stagingService;
 
+	private UserOptionsManager $userOptionsManager;
+
 	private string $branchName;
 
 	private array $stagedArticles;
 
-	public function __construct( StagingService $stagingService ) {
+	public function __construct( StagingService $stagingService, UserOptionsManager $userOptionsManager) {
 		parent::__construct( 'Staging' );
 
 		$this->stagingService = $stagingService;
+		$this->userOptionsManager = $userOptionsManager;
 	}
 
 	protected function getGroupName() {
@@ -118,8 +121,7 @@ class SpecialStaging extends FormSpecialPage {
 
 	private function getDefaultBranch(): string {
 		$user = $this->getUser();
-		$userOptionsManager = MediaWikiServices::getInstance()->getUserOptionsManager();
-		return $userOptionsManager->getOption( $user, 'lakat-default-branch');
+		return $this->userOptionsManager->getOption( $user, 'lakat-default-branch');
 	}
 
 	public function getStagedArticles( string $branchName ): array {
