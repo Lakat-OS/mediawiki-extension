@@ -161,7 +161,8 @@ class StagingService {
 			$message = wfMessage( 'staging-reset-comment' )->inContentLanguage()->text();
 			$comment = CommentStoreComment::newUnsavedComment( $message );
 			$pageUpdater = $page->newPageUpdater( $user )->setContent( SlotRecord::MAIN, $content );
-			$pageUpdater->saveRevision( $comment );
+			$flags = EDIT_INTERNAL | EDIT_SUPPRESS_RC;
+			$pageUpdater->saveRevision( $comment, $flags );
 			if ( !$pageUpdater->wasSuccessful() ) {
 				throw new Exception( 'Failed to update page: ' . $pageUpdater->getStatus()->getWikiText() );
 			}
