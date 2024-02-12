@@ -8,6 +8,11 @@
   ```
 
 * Run the [update script](https://www.mediawiki.org/wiki/Manual:Update.php) which will automatically create necessary database tables that this extension needs.
+  ```
+  php maintenance/run.php update
+  ```
+
+* Done – Navigate to **Special:Version** on your wiki to verify that the extension is successfully installed.
 
 ## Development
 
