@@ -1,0 +1,34 @@
+[
+	{
+		"name": "lakat_staging",
+		"columns": [
+			{
+				"name": "la_id",
+				"comment": "Primary key",
+				"type": "integer",
+				"options": { "notnull": true, "autoincrement": true, "unsigned": true }
+			},
+			{
+				"name": "la_branch_name",
+				"comment": "Branch name where the article belongs",
+				"type": "binary",
+				"options": { "notnull": true, "length": 255 }
+			},
+			{
+				"name": "la_name",
+				"comment": "Name of the article which is either new or modified since last submit to Lakat",
+				"type": "binary",
+				"options": { "notnull": true, "length": 255 }
+			}
+		],
+		"indexes": [
+			{
+				"name": "la_branch_article_unique",
+				"comment": "Index to fetch staged articles and to guarantee article is added only once to staging when it is modified for the first time, subsequent modifications are ignored.",
+				"columns": [ "la_branch_name", "la_name" ],
+				"unique": true
+			}
+		],
+		"pk": [ "la_id" ]
+	}
+]

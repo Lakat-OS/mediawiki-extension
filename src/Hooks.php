@@ -200,6 +200,9 @@ class Hooks implements
 	}
 
 	public function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
-		$updater->addExtensionTable( StagingService::TABLE, realpath(__DIR__ . '/../sql/20240127_212200_create_article_table.sql') );
+		$dbType = $updater->getDB()->getType();
+		$dir = __DIR__ . "/../sql";
+
+		$updater->addExtensionTable( StagingService::TABLE, "$dir/$dbType/tables-generated.sql" );
 	}
 }
