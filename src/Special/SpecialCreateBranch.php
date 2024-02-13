@@ -15,7 +15,7 @@ class SpecialCreateBranch extends FormSpecialPage {
 	private LakatStorage $lakatStorage;
 
 	public function __construct( LakatStorage $lakatStorage, UserOptionsManager $userOptionsManager ) {
-		parent::__construct( 'CreateBranch' );
+		parent::__construct( 'CreateBranch', 'lakat-createbranch' );
 
 		$this->lakatStorage = $lakatStorage;
 		$this->userOptionsManager = $userOptionsManager;
