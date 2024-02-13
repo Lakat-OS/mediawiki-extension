@@ -10,6 +10,7 @@ use MediaWiki\MediaWikiServices;
 use MediaWiki\User\UserOptionsManager;
 use Status;
 use Title;
+use User;
 
 class SpecialCreateBranch extends FormSpecialPage {
 	private LakatStorage $lakatStorage;
@@ -88,6 +89,12 @@ class SpecialCreateBranch extends FormSpecialPage {
 		$this->getOutput()->redirect( $url );
 
 		return Status::newGood();
+	}
+
+	protected function checkExecutePermissions( User $user ) {
+		$this->requireNamedUser();
+
+		parent::checkExecutePermissions( $user );
 	}
 
 	private function setDefaultBranch( string $branchName ): void {
