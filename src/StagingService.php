@@ -54,21 +54,23 @@ class StagingService {
 	 *
 	 * @param string $branchName
 	 * @param array|null $filterArticles Optionally filter articles by name
-	 * @return string[] List of article names
+	 * @return StagedArticle[]
 	 */
 	public function getStagedArticles( string $branchName, array $filterArticles = null ): array {
 		$dbr = $this->loadBalancer->getConnection( DB_REPLICA );
 		$conds = [ 'la_branch_name' => $branchName ];
-		if ($filterArticles !== null) {
+		if ( $filterArticles !== null ) {
 			$conds['la_name'] = $filterArticles;
 		}
-		$res = $dbr->select( self::TABLE, 'la_name', $conds, __METHOD__ );
-		$rows = [];
-		foreach ( $res as $row ) {
-			$rows[] = $row->la_name;
+		$fields = ['la_branch_name', 'la_name', 'la_rev_id'];
+		$rows = $dbr->select( self::TABLE, $fields, $conds, __METHOD__ );
+
+		$res = [];
+		foreach ( $rows as $row ) {
+			$res[] = StagedArticle::fromRow( $row );
 		}
 
-		return $rows;
+		return $res;
 	}
 
 	/**
@@ -76,12 +78,14 @@ class StagingService {
 	 *
 	 * @param string $branchName
 	 * @param string $articleName
+	 * @param int|null $revId Id of the first modified revision
 	 * @return void
 	 */
-	public function stage( string $branchName, string $articleName ) {
+	public function stage( string $branchName, string $articleName, ?int $revId ): void {
 		$row = [
 			'la_branch_name' => $branchName,
 			'la_name' => $articleName,
+			'la_rev_id' => $revId,
 		];
 		$dbw = $this->loadBalancer->getConnection( DB_PRIMARY );
 		$dbw->insert( self::TABLE, $row, __METHOD__, [ 'IGNORE' ] );
@@ -115,7 +119,8 @@ class StagingService {
 	 */
 	public function submitStaged( User $user, string $branchName, array $articles, string $msg ) {
 		$branchId = LakatArticleMetadata::getBranchId( $branchName );
-		foreach ( $this->getStagedArticles( $branchName, $articles ) as $articleName ) {
+		foreach ( $this->getStagedArticles( $branchName, $articles ) as $stagedArticle ) {
+			$articleName = $stagedArticle->articleName;
 			$wikiPage = $this->wikiPageFactory->newFromTitle( Title::newFromText( "$branchName/$articleName" ) );
 			try {
 				$submitData = LakatArticleMetadata::load( $wikiPage );
