@@ -56,18 +56,30 @@
 			"class": "MediaWiki\\Extension\\Lakat\\Special\\SpecialCreateBranch",
 			"services": [ "LakatStorage", "UserOptionsManager" ]
 		},
+		"CreateArticle": {
+			"class": "MediaWiki\\Extension\\Lakat\\Special\\SpecialCreateArticle",
+			"services": [ "LakatStorage", "UserOptionsManager" ]
+		},
 		"FetchBranch": {
 			"class": "MediaWiki\\Extension\\Lakat\\Special\\SpecialFetchBranch",
-			"services": [ "LakatStorage" ]
+			"services": [ "LakatStorage", "WikiPageFactory" ]
 		},
 		"Staging": {
 			"class": "MediaWiki\\Extension\\Lakat\\Special\\SpecialStaging",
-			"services": [ "LakatStagingService" ]
+			"services": [ "LakatStagingService", "UserOptionsManager" ]
 		}
 	},
 	"ServiceWiringFiles": [
 		"src/ServiceWiring.php"
 	],
+	"AvailableRights": [
+		"lakat-createbranch"
+	],
+	"GroupPermissions": {
+		"user": {
+			"lakat-createbranch": true
+		}
+	},
 	"ExtensionMessagesFiles": {
 		"LakatAlias": "i18n/Lakat.alias.php"
 	},

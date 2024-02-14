@@ -4,21 +4,30 @@ namespace MediaWiki\Extension\Lakat\Special;
 
 use FormSpecialPage;
 use Html;
+use HTMLForm;
+use MediaWiki\Extension\Lakat\StagedArticle;
 use MediaWiki\Extension\Lakat\StagingService;
-use MediaWiki\MediaWikiServices;
+use MediaWiki\Title\Title;
+use MediaWiki\User\UserOptionsManager;
 use Status;
 
 class SpecialStaging extends FormSpecialPage {
 	private StagingService $stagingService;
 
+	private UserOptionsManager $userOptionsManager;
+
 	private string $branchName;
 
+	/**
+	 * @var StagedArticle[]
+	 */
 	private array $stagedArticles;
 
-	public function __construct( StagingService $stagingService ) {
+	public function __construct( StagingService $stagingService, UserOptionsManager $userOptionsManager) {
 		parent::__construct( 'Staging' );
 
 		$this->stagingService = $stagingService;
+		$this->userOptionsManager = $userOptionsManager;
 	}
 
 	protected function getGroupName() {
@@ -39,15 +48,40 @@ class SpecialStaging extends FormSpecialPage {
 			return [];
 		}
 
-		$articles = $this->getStagedArticles( $branchName );
-		$options = array_combine( $articles, $articles );
+		$stagedArticles = $this->getStagedArticles( $branchName );
+
+		// prepare options for multiselect
+		$options = [];
+		foreach ($stagedArticles as $stagedArticle) {
+			$articleName = $stagedArticle->articleName;
+
+			// link to page
+			$pageUrl = Title::newFromText( "$branchName/$articleName" )->getLocalURL();
+			$pageLink = HTML::element( 'a', [ 'href' => $pageUrl ], $articleName );
+
+			// link to diff
+			if ($stagedArticle->revId) {
+				$diffParams = [
+					'diff' => 'cur',
+					'oldid' => $stagedArticle->revId,
+					'direction' => 'prev'
+				];
+				$diffUrl = wfAppendQuery( wfScript(), $diffParams );
+				$diffLink = HTML::element( 'a', [ 'href' => $diffUrl ], 'diff' );
+			} else {
+				// diff not needed for a new article
+				$diffLink = 'new';
+			}
+
+			$options["$pageLink&nbsp;|&nbsp;$diffLink"] = $articleName;
+		}
 
 		return [
 			'articles' => [
 				'type' => 'multiselect',
 				'label-message' => 'staging-modified-articles',
 				'options' => $options,
-				'default' => $articles,
+				'default' => array_map( fn( $stagedArticle ) => $stagedArticle->articleName, $stagedArticles ),
 			],
 			'branch' => [
 				'type' => 'text',
@@ -76,11 +110,34 @@ class SpecialStaging extends FormSpecialPage {
 		return '';
 	}
 
+	protected function alterForm( HTMLForm $form ) {
+		$form->addButton( [
+			'name' => 'reset',
+			'value' => 'reset',
+			'label-message' => 'staging-label-reset',
+			'flags' => [ 'destructive' ],
+		] );
+	}
+
 	public function onSubmit( array $data ) {
 		$articles = $data['articles'];
 		$branch = $data['branch'];
 		$message = $data['message'];
-		$this->stagingService->submitStaged( $this->getUser(), $branch, $articles, $message );
+
+		$shouldReset = (bool)$this->getRequest()->getVal( 'reset' );
+		if ( $shouldReset ) {
+			try {
+				$this->stagingService->resetStaged( $this->getUser(), $branch, $articles );
+			} catch ( \Exception $e ) {
+				return Status::newFatal( 'Failed to reset articles: ' . $e->getMessage() );
+			}
+		} else {
+			try {
+				$this->stagingService->submitStaged( $this->getUser(), $branch, $articles, $message );
+			} catch ( \Exception $e ) {
+				return Status::newFatal( 'Failed to submit articles: ' . $e->getMessage() );
+			}
+		}
 
 		return Status::newGood();
 	}
@@ -94,10 +151,13 @@ class SpecialStaging extends FormSpecialPage {
 
 	private function getDefaultBranch(): string {
 		$user = $this->getUser();
-		$userOptionsManager = MediaWikiServices::getInstance()->getUserOptionsManager();
-		return $userOptionsManager->getOption( $user, 'lakat-default-branch');
+		return $this->userOptionsManager->getOption( $user, 'lakat-default-branch');
 	}
 
+	/**
+	 * @param string $branchName
+	 * @return StagedArticle[]
+	 */
 	public function getStagedArticles( string $branchName ): array {
 		if (!isset($this->stagedArticles)) {
 			$this->stagedArticles = $this->stagingService->getStagedArticles( $branchName );
