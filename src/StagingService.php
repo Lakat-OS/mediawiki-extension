@@ -73,6 +73,11 @@ class StagingService {
 		return $res;
 	}
 
+  
+	public function isStaged( string $branchName, string $articleName ): bool {
+		return (bool)$this->getStagedArticles( $branchName, [ $articleName ] );
+	}
+
 	/**
 	 * Add article to the list of modified articles
 	 *
@@ -82,6 +87,7 @@ class StagingService {
 	 * @return void
 	 */
 	public function stage( string $branchName, string $articleName, ?int $revId ): void {
+
 		$row = [
 			'la_branch_name' => $branchName,
 			'la_name' => $articleName,
