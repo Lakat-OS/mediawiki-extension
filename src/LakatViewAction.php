@@ -3,10 +3,8 @@
 namespace MediaWiki\Extension\Lakat;
 
 use Exception;
-use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\Html\Html;
 use MediaWiki\Language\RawMessage;
-use MediaWiki\MediaWikiServices;
 use ViewAction;
 
 class LakatViewAction extends ViewAction {

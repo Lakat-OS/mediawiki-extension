@@ -32,9 +32,6 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 
 		$services = $this->getServiceContainer();
 
-		$this->stagingService = LakatServices::getStagingService( $services );
-		$this->lakatStorage = LakatServices::getLakatStorage( $services );
-
 		// use HttpRequestFactory instead of NullHttpRequestFactory to test RPC calls
 		$services->resetServiceForTesting('HttpRequestFactory');
 		$services->redefineService(
@@ -46,6 +43,9 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 				);
 			}
 		);
+
+		$this->stagingService = LakatServices::getStagingService( $services );
+		$this->lakatStorage = LakatServices::getLakatStorage( $services );
 	}
 
 	/**
@@ -69,11 +69,108 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 		$this->assertEquals( [$articleName], $articles );
 
 		// 3. submit staged articles
-		$this->stagingService->submitStaged( $this->getUser(), $branchName, 'Test submit' );
+		$this->stagingService->submitStaged( $this->getUser(), $branchName, $articles, 'Test submit' );
 
 		// check nothing staged
 		$modifiedArticles = $this->stagingService->getStagedArticles( $branchName );
 		$this->assertEquals( [], $modifiedArticles );
+	}
+
+	/**
+	 * @covers ::reset
+	 */
+	public function testResetNewArticle() {
+		// 1. create branch
+		$branchName = 'Test branch ResetNewArticle ' . microtime( true );
+		$this->createBranch( $branchName );
+
+		// check nothing staged
+		$modifiedArticles = $this->stagingService->getStagedArticles( $branchName );
+		$this->assertEquals( [], $modifiedArticles );
+
+		// 2. create article in the branch
+		$articleName = 'Test article';
+		$articleText = 'Test content';
+		$page = $this->getExistingTestPage( "$branchName/$articleName" );
+		$this->editPage( $page, $articleText );
+
+		// check one article staged
+		$articles = $this->stagingService->getStagedArticles( $branchName );
+		$this->assertEquals( [ $articleName ], $articles );
+
+		// check article content is saved
+		$content = $page->getContent();
+		$this->assertEquals( $articleText, $content->serialize() );
+
+		// 3. reset article
+		$this->stagingService->reset( $this->getUser(), $branchName, $articleName );
+
+		// check nothing staged
+		$modifiedArticles = $this->stagingService->getStagedArticles( $branchName );
+		$this->assertEquals( [], $modifiedArticles );
+
+		// check article page is deleted
+		$page =
+			MediaWikiServices::getInstance()
+				->getWikiPageFactory()
+				->newFromTitle( Title::newFromText( "$branchName/$articleName" ) );
+		$this->assertFalse( $page->exists() );
+	}
+
+	/**
+	 * @covers ::reset
+	 */
+	public function testResetEditedArticle() {
+		// 1. create branch
+		$branchName = 'Test branch ResetNewArticle ' . microtime( true );
+		$this->createBranch( $branchName );
+
+		// check nothing staged
+		$modifiedArticles = $this->stagingService->getStagedArticles( $branchName );
+		$this->assertEquals( [], $modifiedArticles );
+
+		// 2. create article in the branch
+		$articleName = 'Test article';
+		$articleText = 'Test content';
+		$updateStatus = $this->editPage( "$branchName/$articleName", $articleText );
+		$this->assertTrue( $updateStatus->isGood() );
+
+		// check one article staged
+		$articles = $this->stagingService->getStagedArticles( $branchName );
+		$this->assertEquals( [ $articleName ], $articles );
+
+		// check article content is saved
+		$content = $this->getExistingTestPage( "$branchName/$articleName" )->getContent();
+		$this->assertEquals( $articleText, $content->serialize() );
+
+		// 3. submit staged articles
+		$this->stagingService->submitStaged( $this->getUser(), $branchName, $articles, 'Test submit' );
+
+		// check nothing staged
+		$modifiedArticles = $this->stagingService->getStagedArticles( $branchName );
+		$this->assertEquals( [], $modifiedArticles );
+
+		// 4. edit article
+		$modifiedArticleText = 'Modified test content';
+		$updateStatus = $this->editPage( "$branchName/$articleName", $modifiedArticleText );
+		$this->assertTrue( $updateStatus->isGood() );
+
+		// check article content changed and staged
+		$content = $this->getExistingTestPage( "$branchName/$articleName" )->getContent();
+		$this->assertEquals( 'Modified test content', $content->serialize() );
+		$articles = $this->stagingService->getStagedArticles( $branchName );
+		$this->assertEquals( [ $articleName ], $articles );
+
+		// 5. reset article modifications
+		$this->stagingService->reset( $this->getUser(), $branchName, $articleName );
+
+		// check nothing staged
+		$modifiedArticles = $this->stagingService->getStagedArticles( $branchName );
+		$this->assertEquals( [], $modifiedArticles );
+
+		// check article content is reset to previous version
+		$content = $this->getExistingTestPage( "$branchName/$articleName" )->getContent();
+		$this->assertEquals( "\n" . $articleText, $content->serialize() );
 	}
 
 	private function createBranch( string $branchName ) {

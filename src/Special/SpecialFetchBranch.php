@@ -7,7 +7,7 @@ use ContentHandler;
 use Exception;
 use FormatJson;
 use MediaWiki\Extension\Lakat\Storage\LakatStorage;
-use MediaWiki\MediaWikiServices;
+use MediaWiki\Page\WikiPageFactory;
 use MediaWiki\Revision\SlotRecord;
 use RedirectSpecialArticle;
 use Title;
@@ -15,10 +15,13 @@ use Title;
 class SpecialFetchBranch extends RedirectSpecialArticle {
 	private LakatStorage $lakatStorage;
 
-	public function __construct( LakatStorage $lakatStorage ) {
+	private WikiPageFactory $wikiPageFactory;
+
+	public function __construct( LakatStorage $lakatStorage, WikiPageFactory $wikiPageFactory ) {
 		parent::__construct( 'FetchBranch' );
 
 		$this->lakatStorage = $lakatStorage;
+		$this->wikiPageFactory = $wikiPageFactory;
 	}
 
 	protected function getGroupName(): string {
@@ -60,7 +63,7 @@ class SpecialFetchBranch extends RedirectSpecialArticle {
 		$data = $this->lakatStorage->getBranchDataFromBranchId( $branchId, false );
 
 		// create branch page
-		$page = MediaWikiServices::getInstance()->getWikiPageFactory()->newFromTitle( $title );
+		$page = $this->wikiPageFactory->newFromTitle( $title );
 		$content = ContentHandler::makeContent( FormatJson::encode( $data ), $title, CONTENT_MODEL_JSON );
 		$comment = CommentStoreComment::newUnsavedComment(
 			wfMessage( 'createbranch-revision-comment' )->inContentLanguage()->text()

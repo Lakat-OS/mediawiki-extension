@@ -1,22 +1,62 @@
-This is a blank extension template. It doesn't really do anything on its own.
-It is intended to provide a boiler template for an actual MediaWiki extension.
+## Installation
 
-If you are checking this out from Git and intend to use it, you may use the
-following commands to make a clean directory of just this template without the
-Git meta-data and other examples.
+* Download and move Lakat extension files to `extensions/Lakat` directory in your MediaWiki installation.
 
-	cd extensions
-	git clone https://gerrit.wikimedia.org/r/mediawiki/extensions/Lakat.git
-	cp -r Lakat ./MyExtension
-	rm -rf ./MyExtension/.git
+* Add the following code at the bottom of your `LocalSettings.php` file:
+  ```php
+  wfLoadExtension( 'Lakat' );
+  ```
 
-This automates the recommended code checkers for PHP and JavaScript code in Wikimedia projects
-(see https://www.mediawiki.org/wiki/Continuous_integration/Entry_points).
-To take advantage of this automation.
+* Run the [update script](https://www.mediawiki.org/wiki/Manual:Update.php) which will automatically create necessary database tables that this extension needs.
+  ```
+  php maintenance/run.php update
+  ```
 
-1. install nodejs, npm, and PHP composer
-2. change to the extension's directory
-3. `npm install`
-4. `composer install`
+* Done – Navigate to **Special:Version** on your wiki to verify that the extension is successfully installed.
 
-Once set up, running `npm test` and `composer test` will run automated code checks.
+## Development
+
+### Database
+
+SQL files to create necessary tables can be found in `sql/` subdirectory. Run [update script](https://www.mediawiki.org/wiki/Manual:Update.php) when database schema update is necessary.
+
+### Service container
+
+[Dependency injection in MediaWiki](https://www.mediawiki.org/wiki/Dependency_Injection) is implemented in service container class `MediaWikiServices`. It is responsible for creation of all service classes, including those from extensions.
+
+To find out what services are defined in Lakat extension look at following files:
+* [ServiceWiring.php](./src/ServiceWiring.php) - defines how services are created by mapping service names to instantiation callbacks
+* [LakatServices.php](./src/LakatServices.php) - defines static functions for easy access to service, e.g. `LakatServices::getStagingService()`
+
+Constructor parameter is the recommended best practice to inject service in your class and should be used instead of direct instantiation when possible, e.g.:
+```php
+class SomeClass {
+    private StagingService $stagingService;
+
+    public function __construct( StagingService $stagingService ) {
+        $this->stagingService = $stagingService;
+    }
+
+    public function someMethod() {
+        $this->stagingService->getStagedArticles( 'SomeBranch' );
+    }
+}
+```
+
+### StagingService
+
+`StagingService` controls what articles are currently modified relatively to the last submit to Lakat storage.
+Internally service keeps track of modified articles in SQL table `lakat_staging`.
+
+#### Usage
+
+`StagingService` is registered in MediaWiki's service container and should be instantiated like it is shown above.
+
+#### Methods
+
+* `getStagedArticles` - retrieve list of modified articles
+* `stage` - add articles to the list of modified articles
+* `unstage` - remove article from the list of modified articles
+* `submitStaged` - submit selected articles to Lakat
+
+
