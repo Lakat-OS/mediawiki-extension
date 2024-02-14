@@ -6,7 +6,6 @@ use Exception;
 use FormSpecialPage;
 use MediaWiki\Extension\Lakat\Domain\BranchType;
 use MediaWiki\Extension\Lakat\Storage\LakatStorage;
-use MediaWiki\MediaWikiServices;
 use MediaWiki\User\UserOptionsManager;
 use Status;
 use Title;
@@ -14,6 +13,8 @@ use User;
 
 class SpecialCreateBranch extends FormSpecialPage {
 	private LakatStorage $lakatStorage;
+
+	private UserOptionsManager $userOptionsManager;
 
 	public function __construct( LakatStorage $lakatStorage, UserOptionsManager $userOptionsManager ) {
 		parent::__construct( 'CreateBranch', 'lakat-createbranch' );
@@ -35,6 +36,7 @@ class SpecialCreateBranch extends FormSpecialPage {
 			'BranchName' => [
 				'type' => 'text',
 				'label-message' => 'createbranch-name',
+				'required' => true,
 			],
 			'Token' => [
 				'type' => 'text',

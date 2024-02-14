@@ -13,6 +13,8 @@
 	"lakat-diffs-tooltip": "Show the diffs of the current page",
 	"lakat-create-branch": "Create Branch",
 	"lakat-create-branch-tooltip": "Create a new branch",
+	"lakat-create-article": "Create Article",
+	"lakat-create-article-tooltip": "Create a new article",
 	"lakat-branch-config": "Branch Configuration",
 	"lakat-branch-config-tooltip": "Configure the branches",
 	"lakat-token": "Token",
@@ -35,7 +37,9 @@
 	"createbranch-revision-comment": "Lakat: New branch created",
 	"action-lakat-createbranch": "create Lakat branch",
 	"right-lakat-createbranch": "Create Lakat branch",
-
+	"createarticle": "Create Article",
+	"createarticle-branch-name": "Branch",
+	"createarticle-article-name": "Title",
 	"fetcharticle-revision-comment": "Lakat: Article copied from remote storage",
 
 	"staging": "Staging",
@@ -45,6 +49,8 @@
 	"staging-modified-articles": "Modified articles:",
 	"staging-branch-not-specified": "Branch not specified",
 	"staging-nothing-staged": "No changed articles in this branch, nothing to submit",
+	"staging-label-reset": "Reset",
+	"staging-reset-comment": "Lakat: Reset changes",
 
 	"prefs-lakat": "Lakat",
 	"prefs-options": "Options",

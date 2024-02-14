@@ -21,13 +21,10 @@ namespace MediaWiki\Extension\Lakat;
 
 use Article;
 use DatabaseUpdater;
-use MediaWiki\Extension\Lakat\Domain\BucketRefType;
-use MediaWiki\Extension\Lakat\Domain\BucketSchema;
-use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\Hook\BeforePageDisplayHook;
 use MediaWiki\Hook\MediaWikiServicesHook;
 use MediaWiki\Hook\SkinTemplateNavigation__UniversalHook;
-use MediaWiki\Revision\SlotRecord;
+use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\SlotRoleRegistry;
 use MediaWiki\Storage\Hook\PageSaveCompleteHook;
 use MediaWiki\Title\Title;
@@ -116,6 +113,12 @@ class Hooks implements
 				'href' => Title::newFromText('Special:CreateBranch')->getLinkURL(),
 				'title' => $sktemplate->msg( 'lakat-create-branch-tooltip' )->text(),
 			],
+			'createarticle' => [
+				'class' => false,
+				'text' => $sktemplate->msg( 'lakat-create-article' )->text(),
+				'href' => Title::newFromText('Special:CreateArticle')->getLinkURL(),
+				'title' => $sktemplate->msg( 'lakat-create-article-tooltip' )->text(),
+			],
 			'branchconfig' => [
 				'class' => false,
 				'text' => $sktemplate->msg( 'lakat-branch-config' )->text(),
@@ -195,11 +198,16 @@ class Hooks implements
 			$articleName = $title->getSubpageText();
 
 			// stage article
-			LakatServices::getStagingService()->stage( $branchName, $articleName );
+			$revisionStore = MediaWikiServices::getInstance()->getRevisionStore();
+			$prevRevId = $revisionStore->getPreviousRevision( $revisionRecord )?->getId();
+			LakatServices::getStagingService()->stage( $branchName, $articleName, $prevRevId );
 		}
 	}
 
 	public function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater ) {
-		$updater->addExtensionTable( StagingService::TABLE, realpath(__DIR__ . '/../sql/20240127_212200_create_article_table.sql') );
+		$dbType = $updater->getDB()->getType();
+		$dir = __DIR__ . "/../sql";
+
+		$updater->addExtensionTable( StagingService::TABLE, "$dir/$dbType/tables-generated.sql" );
 	}
 }
