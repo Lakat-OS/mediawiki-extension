@@ -72,6 +72,14 @@
 	"ServiceWiringFiles": [
 		"src/ServiceWiring.php"
 	],
+	"AvailableRights": [
+		"lakat-createbranch"
+	],
+	"GroupPermissions": {
+		"user": {
+			"lakat-createbranch": true
+		}
+	},
 	"ExtensionMessagesFiles": {
 		"LakatAlias": "i18n/Lakat.alias.php"
 	},
