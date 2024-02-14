@@ -58,11 +58,11 @@
 		},
 		"FetchBranch": {
 			"class": "MediaWiki\\Extension\\Lakat\\Special\\SpecialFetchBranch",
-			"services": [ "LakatStorage" ]
+			"services": [ "LakatStorage", "WikiPageFactory" ]
 		},
 		"Staging": {
 			"class": "MediaWiki\\Extension\\Lakat\\Special\\SpecialStaging",
-			"services": [ "LakatStagingService" ]
+			"services": [ "LakatStagingService", "UserOptionsManager" ]
 		}
 	},
 	"ServiceWiringFiles": [
