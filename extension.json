@@ -56,6 +56,10 @@
 			"class": "MediaWiki\\Extension\\Lakat\\Special\\SpecialCreateBranch",
 			"services": [ "LakatStorage", "UserOptionsManager" ]
 		},
+		"CreateArticle": {
+			"class": "MediaWiki\\Extension\\Lakat\\Special\\SpecialCreateArticle",
+			"services": [ "LakatStorage", "UserOptionsManager" ]
+		},
 		"FetchBranch": {
 			"class": "MediaWiki\\Extension\\Lakat\\Special\\SpecialFetchBranch",
 			"services": [ "LakatStorage", "WikiPageFactory" ]

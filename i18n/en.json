@@ -13,6 +13,8 @@
 	"lakat-diffs-tooltip": "Show the diffs of the current page",
 	"lakat-create-branch": "Create Branch",
 	"lakat-create-branch-tooltip": "Create a new branch",
+	"lakat-create-article": "Create Article",
+	"lakat-create-article-tooltip": "Create a new article",
 	"lakat-branch-config": "Branch Configuration",
 	"lakat-branch-config-tooltip": "Configure the branches",
 	"lakat-token": "Token",
@@ -33,6 +35,9 @@
 	"createbranch-error-invalid-name": "Branch name is invalid",
 	"createbranch-error-remote": "Failed to create remote branch",
 	"createbranch-revision-comment": "Lakat: New branch created",
+	"createarticle": "Create Article",
+	"createarticle-branch-name": "Branch",
+	"createarticle-article-name": "Title",
 	"fetcharticle-revision-comment": "Lakat: Article copied from remote storage",
 
 	"staging": "Staging",

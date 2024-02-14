@@ -113,6 +113,12 @@ class Hooks implements
 				'href' => Title::newFromText('Special:CreateBranch')->getLinkURL(),
 				'title' => $sktemplate->msg( 'lakat-create-branch-tooltip' )->text(),
 			],
+			'createarticle' => [
+				'class' => false,
+				'text' => $sktemplate->msg( 'lakat-create-article' )->text(),
+				'href' => Title::newFromText('Special:CreateArticle')->getLinkURL(),
+				'title' => $sktemplate->msg( 'lakat-create-article-tooltip' )->text(),
+			],
 			'branchconfig' => [
 				'class' => false,
 				'text' => $sktemplate->msg( 'lakat-branch-config' )->text(),
