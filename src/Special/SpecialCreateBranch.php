@@ -35,6 +35,7 @@ class SpecialCreateBranch extends FormSpecialPage {
 			'BranchName' => [
 				'type' => 'text',
 				'label-message' => 'createbranch-name',
+				'required' => true,
 			],
 			'Token' => [
 				'type' => 'text',
