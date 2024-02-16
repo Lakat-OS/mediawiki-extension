@@ -7,6 +7,7 @@ use ContentHandler;
 use Exception;
 use MediaWiki\Extension\Lakat\Domain\BucketRefType;
 use MediaWiki\Extension\Lakat\Domain\BucketSchema;
+use MediaWiki\Extension\Lakat\Storage\Exceptions\ArticleNotFoundException;
 use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\Page\DeletePageFactory;
 use MediaWiki\Page\WikiPageFactory;
@@ -73,7 +74,7 @@ class StagingService {
 		return $res;
 	}
 
-  
+
 	public function isStaged( string $branchName, string $articleName ): bool {
 		return (bool)$this->getStagedArticles( $branchName, [ $articleName ] );
 	}
@@ -181,12 +182,10 @@ class StagingService {
 		$page = $this->wikiPageFactory->newFromTitle( Title::newFromText( "$branchName/$articleName" ) );
 
 		$branchId = LakatArticleMetadata::getBranchId( $branchName );
-		$text = null;
 		try {
 			$text = $this->lakatStorage->getArticleFromArticleName( $branchId, $articleName );
-		} catch ( Exception $e ) {
-			// here we assume article doesn't exist on Lakat,
-			// but it would be better to use more specific exception
+		} catch ( ArticleNotFoundException $e ) {
+			$text = null;
 		}
 
 		if ($text === null) {

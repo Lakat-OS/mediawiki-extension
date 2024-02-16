@@ -3,6 +3,7 @@
 namespace MediaWiki\Extension\Lakat;
 
 use Exception;
+use MediaWiki\Extension\Lakat\Storage\Exceptions\LakatException;
 use MediaWiki\Html\Html;
 use MediaWiki\Language\RawMessage;
 use ViewAction;
@@ -68,7 +69,7 @@ class LakatViewAction extends ViewAction {
 			}
 
 			// Load page from remote storage
-			$this->getOutput()->addWikiTextAsContent('== Content from remote storage ==');
+			$this->getOutput()->addWikiTextAsContent('== Content from Lakat ==');
 
 			try {
 				$text = LakatServices::getLakatStorage()->getArticleFromArticleName( $branchId, $articleName );
