@@ -13,14 +13,17 @@ class LakatViewAction extends ViewAction {
 	 */
 	public function show() {
 		$title = $this->getTitle();
+
+		// exit early if this is not an article page
 		if ( !$title->isSubpage() ) {
-			// article must be a subpage of a branch page
+			parent::show();
 			return;
 		}
 
 		$branchName = $title->getRootText();
 		$articleName = $title->getSubpageText();
 
+		// show infobox on top if article is modified since last sync with Lakat
 		if (LakatServices::getStagingService()->isStaged( $branchName, $articleName )) {
 			$this->getOutput()->addHTML( HTML::warningBox( $this->msg('staging-article-modified') ) );
 		}
