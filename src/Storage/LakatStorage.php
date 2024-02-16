@@ -3,6 +3,8 @@
 namespace MediaWiki\Extension\Lakat\Storage;
 
 use Exception;
+use MediaWiki\Extension\Lakat\Storage\Exceptions\ArticleNotFoundException;
+use MediaWiki\Extension\Lakat\Storage\Exceptions\LakatException;
 use MediaWiki\Http\HttpRequestFactory;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -91,7 +93,17 @@ class LakatStorage implements LakatStorageInterface {
 			$name,
 		];
 
-		return $this->rpc( $method, $params );
+		$res = $this->rpc( $method, $params );
+
+		$code = $res['response_code'];
+		if ( $code == 404 ) {
+			throw new ArticleNotFoundException( 'Article not found on Lakat' );
+		}
+		if ( $code != 200 ) {
+			throw new LakatException( 'Lakat error', $code );
+		}
+
+		return $res['article'];
 	}
 
 	private function rpc( string $method, array $params = [] ) {
