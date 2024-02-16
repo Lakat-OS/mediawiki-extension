@@ -6,6 +6,7 @@ CREATE TABLE /*_*/lakat_staging (
   la_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
   la_branch_name VARBINARY(255) NOT NULL,
   la_name VARBINARY(255) NOT NULL,
+  la_rev_id INT UNSIGNED DEFAULT NULL,
   UNIQUE INDEX la_branch_article_unique (la_branch_name, la_name),
   PRIMARY KEY(la_id)
 ) /*$wgDBTableOptions*/;

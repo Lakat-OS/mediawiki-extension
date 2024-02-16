@@ -19,6 +19,12 @@
 				"comment": "Name of the article which is either new or modified since last submit to Lakat",
 				"type": "binary",
 				"options": { "notnull": true, "length": 255 }
+			},
+			{
+				"name": "la_rev_id",
+				"comment": "Id of the last revision submitted to Lakat",
+				"type": "integer",
+				"options": {  "notnull": false, "unsigned": true }
 			}
 		],
 		"indexes": [

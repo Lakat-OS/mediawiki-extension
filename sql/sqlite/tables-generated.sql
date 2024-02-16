@@ -4,7 +4,8 @@
 -- See https://www.mediawiki.org/wiki/Manual:Schema_changes
 CREATE TABLE /*_*/lakat_staging (
   la_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-  la_branch_name BLOB NOT NULL, la_name BLOB NOT NULL
+  la_branch_name BLOB NOT NULL, la_name BLOB NOT NULL,
+  la_rev_id INTEGER UNSIGNED DEFAULT NULL
 );
 
 CREATE UNIQUE INDEX la_branch_article_unique ON /*_*/lakat_staging (la_branch_name, la_name);
