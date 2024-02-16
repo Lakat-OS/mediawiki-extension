@@ -52,6 +52,8 @@
 	"staging-article-modified": "Article content is modified. Go to [[Special:Staging]] to submit.",
 	"staging-label-reset": "Reset",
 	"staging-reset-comment": "Lakat: Reset changes",
+	"staging-no-branch-title": "No branch specified",
+	"staging-no-branch-msg": "No branch specified. Go to [[Special:CreateBranch]] to create branch.",
 
 	"prefs-lakat": "Lakat",
 	"prefs-options": "Options",

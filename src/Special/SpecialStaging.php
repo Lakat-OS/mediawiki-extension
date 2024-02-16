@@ -2,6 +2,7 @@
 
 namespace MediaWiki\Extension\Lakat\Special;
 
+use ErrorPageError;
 use FormSpecialPage;
 use Html;
 use HTMLForm;
@@ -10,13 +11,14 @@ use MediaWiki\Extension\Lakat\StagingService;
 use MediaWiki\Title\Title;
 use MediaWiki\User\UserOptionsManager;
 use Status;
+use User;
 
 class SpecialStaging extends FormSpecialPage {
 	private StagingService $stagingService;
 
 	private UserOptionsManager $userOptionsManager;
 
-	private string $branchName;
+	private ?string $branchName;
 
 	/**
 	 * @var StagedArticle[]
@@ -142,14 +144,22 @@ class SpecialStaging extends FormSpecialPage {
 		return Status::newGood();
 	}
 
-	private function getBranchName(): string {
+	protected function checkExecutePermissions( User $user ) {
+		$this->requireNamedUser();
+
+		if (!$this->getBranchName()) {
+			throw new ErrorPageError( 'staging-no-branch-title', 'staging-no-branch-msg' );
+		}
+	}
+
+	private function getBranchName(): ?string {
 		if (!isset($this->branchName)) {
 			$this->branchName = $this->par ?: $this->getDefaultBranch();
 		}
 		return $this->branchName;
 	}
 
-	private function getDefaultBranch(): string {
+	private function getDefaultBranch(): ?string {
 		$user = $this->getUser();
 		return $this->userOptionsManager->getOption( $user, 'lakat-default-branch');
 	}
