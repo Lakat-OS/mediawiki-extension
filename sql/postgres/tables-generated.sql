@@ -6,6 +6,7 @@ CREATE TABLE lakat_staging (
   la_id SERIAL NOT NULL,
   la_branch_name TEXT NOT NULL,
   la_name TEXT NOT NULL,
+  la_rev_id INT DEFAULT NULL,
   PRIMARY KEY(la_id)
 );
 
