@@ -20,6 +20,31 @@
 
 SQL files to create necessary tables can be found in `sql/` subdirectory. Run [update script](https://www.mediawiki.org/wiki/Manual:Update.php) when database schema update is necessary.
 
+### Permissions
+
+Access permissions are defined in [extension.json](./extension.json), e.g.:
+
+```json
+	"AvailableRights": [
+		"lakat-createbranch"
+	],
+	"GroupPermissions": {
+		"user": {
+			"lakat-createbranch": true
+		}
+	},
+```
+
+See [Manual:$wgAvailableRights](https://www.mediawiki.org/wiki/Manual:$wgAvailableRights) for details.
+
+Permissions defined in this way can be used in special pages by providing it in the constructor:
+
+```php
+    parent::__construct( 'CreateBranch', 'lakat-createbranch' );
+```
+
+Additionally, special page can require user log in. Method `SpecialPage::requireNamedUser()` can be used to conveniently show log in form.
+
 ### Service container
 
 [Dependency injection in MediaWiki](https://www.mediawiki.org/wiki/Dependency_Injection) is implemented in service container class `MediaWikiServices`. It is responsible for creation of all service classes, including those from extensions.
