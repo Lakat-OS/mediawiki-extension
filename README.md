@@ -58,6 +58,9 @@ Internally service keeps track of modified articles in SQL table `lakat_staging`
 * `stage` - add articles to the list of modified articles
 * `unstage` - remove article from the list of modified articles
 * `submitStaged` - submit selected articles to Lakat
+* `reset` - reset modified article to the state stored in Lakat storage
+  * if article doesn't exist on Lakat then delete wiki page
+  * otherwise fetch article content from Lakat and save as new revision in wiki page, then unstage article
 
 ### SpecialFetchBranch
 
