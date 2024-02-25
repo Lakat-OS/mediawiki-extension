@@ -59,4 +59,6 @@ Internally service keeps track of modified articles in SQL table `lakat_staging`
 * `unstage` - remove article from the list of modified articles
 * `submitStaged` - submit selected articles to Lakat
 
+### SpecialFetchBranch
 
+`SpecialFetchBranch` is a redirect special page which is special kind of special page in MediaWiki. When requesting URL `SpecialFetchBranch/<BranchId>` then branch is fetched from Lakat and stored in wiki page.
