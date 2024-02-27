@@ -32,6 +32,10 @@ class SpecialStaging extends FormSpecialPage {
 		$this->userOptionsManager = $userOptionsManager;
 	}
 
+	public function doesWrites() {
+		return true;
+	}
+
 	protected function getGroupName() {
 		return 'lakat';
 	}
@@ -46,10 +50,6 @@ class SpecialStaging extends FormSpecialPage {
 
 	protected function getFormFields() {
 		$branchName = $this->getBranchName();
-		if ( !$branchName ) {
-			return [];
-		}
-
 		$stagedArticles = $this->getStagedArticles( $branchName );
 
 		// prepare options for multiselect
@@ -140,6 +140,11 @@ class SpecialStaging extends FormSpecialPage {
 				return Status::newFatal( 'Failed to submit articles: ' . $e->getMessage() );
 			}
 		}
+
+		// reload Special:Staging
+		$target = Title::newFromText( 'Special:Staging' );
+		$url = $target->getFullUrlForRedirect();
+		$this->getOutput()->redirect( $url );
 
 		return Status::newGood();
 	}
