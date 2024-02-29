@@ -20,6 +20,31 @@
 
 SQL files to create necessary tables can be found in `sql/` subdirectory. Run [update script](https://www.mediawiki.org/wiki/Manual:Update.php) when database schema update is necessary.
 
+### Permissions
+
+Access permissions are defined in [extension.json](./extension.json), e.g.:
+
+```json
+	"AvailableRights": [
+		"lakat-createbranch"
+	],
+	"GroupPermissions": {
+		"user": {
+			"lakat-createbranch": true
+		}
+	},
+```
+
+See [Manual:$wgAvailableRights](https://www.mediawiki.org/wiki/Manual:$wgAvailableRights) for details.
+
+Permissions defined in this way can be used in special pages by providing it in the constructor:
+
+```php
+    parent::__construct( 'CreateBranch', 'lakat-createbranch' );
+```
+
+Additionally, special page can require user log in. Method `SpecialPage::requireNamedUser()` can be used to conveniently show log in form.
+
 ### Service container
 
 [Dependency injection in MediaWiki](https://www.mediawiki.org/wiki/Dependency_Injection) is implemented in service container class `MediaWikiServices`. It is responsible for creation of all service classes, including those from extensions.
@@ -58,5 +83,10 @@ Internally service keeps track of modified articles in SQL table `lakat_staging`
 * `stage` - add articles to the list of modified articles
 * `unstage` - remove article from the list of modified articles
 * `submitStaged` - submit selected articles to Lakat
+* `reset` - reset modified article to the state stored in Lakat storage
+  * if article doesn't exist on Lakat then delete wiki page
+  * otherwise fetch article content from Lakat and save as new revision in wiki page, then unstage article
 
+### SpecialFetchBranch
 
+`SpecialFetchBranch` is a redirect special page which is special kind of special page in MediaWiki. When requesting URL `SpecialFetchBranch/<BranchId>` then branch is fetched from Lakat and stored in wiki page.
