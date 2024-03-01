@@ -22,7 +22,7 @@ class BucketFactoryTest extends MediaWikiIntegrationTestCase {
 		parent::setUp();
 
 		$this->wikiPageFactory = $this->getServiceContainer()->getWikiPageFactory();
-		$this->bucketFactory = $this->getServiceContainer()->get(BucketFactory::SERVICE_NAME);
+		$this->bucketFactory = $this->getServiceContainer()->get( BucketFactory::SERVICE_NAME );
 	}
 
 	/**
@@ -64,12 +64,26 @@ class BucketFactoryTest extends MediaWikiIntegrationTestCase {
 		$this->assertCount( 5, $buckets );
 		$this->assertInstanceOf( AtomicBucket::class, $buckets[0] );
 		$this->assertEquals( 'aaa', $buckets[0]->data() );
-		$this->assertInstanceOf( MolecularBucket::class, $buckets[1] );
-		$this->assertEquals( 'Section1', $buckets[1]->name() );
+
+		$section1 = $buckets[1];
+		$this->assertInstanceOf( MolecularBucket::class, $section1 );
+		$this->assertEquals( 'Section1', $section1->name() );
+		$buckets1 = $section1->buckets();
+		$this->assertCount( 1, $buckets1 );
+		$this->assertInstanceOf( AtomicBucket::class, $buckets1[0] );
+		$this->assertEquals( 'Content1', $buckets1[0]->data() );
+
 		$this->assertInstanceOf( AtomicBucket::class, $buckets[2] );
 		$this->assertEquals( 'bbb', $buckets[2]->data() );
-		$this->assertInstanceOf( MolecularBucket::class, $buckets[3] );
-		$this->assertEquals( 'Section2', $buckets[3]->name() );
+
+		$section2 = $buckets[3];
+		$this->assertInstanceOf( MolecularBucket::class, $section2 );
+		$this->assertEquals( 'Section2', $section2->name() );
+		$buckets2 = $section2->buckets();
+		$this->assertCount( 1, $buckets2 );
+		$this->assertInstanceOf( AtomicBucket::class, $buckets2[0] );
+		$this->assertEquals( 'Content2', $buckets2[0]->data() );
+
 		$this->assertInstanceOf( AtomicBucket::class, $buckets[4] );
 		$this->assertEquals( 'ccc', $buckets[4]->data() );
 	}
