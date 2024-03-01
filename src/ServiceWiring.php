@@ -21,7 +21,8 @@ return [
 			$services->getDBLoadBalancer(),
 			LakatServices::getLakatStorage( $services ),
 			$services->getWikiPageFactory(),
-			$services->getDeletePageFactory()
+			$services->getDeletePageFactory(),
+			LakatServices::getBucketFactory( $services ),
 		);
 	},
 	BucketFactory::SERVICE_NAME => static function ( MediaWikiServices $services ): BucketFactory {

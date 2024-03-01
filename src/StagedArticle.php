@@ -24,4 +24,9 @@ class StagedArticle {
 			$row->la_rev_id
 		);
 	}
+
+	public function isNew(): bool
+	{
+		return $this->revId === null;
+	}
 }
