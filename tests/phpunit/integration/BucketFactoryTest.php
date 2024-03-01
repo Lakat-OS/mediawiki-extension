@@ -1,22 +1,30 @@
 <?php
 
-namespace MediaWiki\Extension\Lakat\Tests\Unit;
+namespace MediaWiki\Extension\Lakat\Tests\Integration;
 
-use MediaWiki\Extension\Lakat\Domain\Article;
 use MediaWiki\Extension\Lakat\Domain\AtomicBucket;
+use MediaWiki\Extension\Lakat\Domain\BucketFactory;
 use MediaWiki\Extension\Lakat\Domain\MolecularBucket;
-use MediaWikiUnitTestCase;
+use MediaWikiIntegrationTestCase;
 
 /**
- * @coversDefaultClass \MediaWiki\Extension\Lakat\Domain\Article
+ * @coversDefaultClass \MediaWiki\Extension\Lakat\Domain\BucketFactory
  */
-class ArticleTest extends MediaWikiUnitTestCase {
+class BucketFactoryTest extends MediaWikiIntegrationTestCase {
+	private BucketFactory $bucketFactory;
+
+	protected function setUp(): void {
+		parent::setUp();
+
+		$this->bucketFactory = $this->getServiceContainer()->get(BucketFactory::SERVICE_NAME);
+	}
+
 	/**
 	 * @covers ::fromWikiText
 	 */
 	public function testArticleFromWikiText_empty() {
 		$name = 'Test article';
-		$article = Article::fromWikiText( $name, '' );
+		$article = $this->bucketFactory->fromWikiText( $name, '' );
 
 		$this->assertEquals( $name, $article->name() );
 		$this->assertCount( 0, $article->buckets() );
@@ -26,7 +34,7 @@ class ArticleTest extends MediaWikiUnitTestCase {
 	 * @covers ::fromWikiText
 	 */
 	public function testArticleFromWikiText_simple() {
-		$article = Article::fromWikiText( 'Test article', 'Simple content');
+		$article = $this->bucketFactory->fromWikiText( 'Test article', 'Simple content');
 
 		$buckets = $article->buckets();
 		$this->assertCount( 1, $buckets );
@@ -38,7 +46,7 @@ class ArticleTest extends MediaWikiUnitTestCase {
 	 * @covers ::fromWikiText
 	 */
 	public function testArticleFromWikiText_ref() {
-		$article = Article::fromWikiText(
+		$article = $this->bucketFactory->fromWikiText(
 			'Test article',
 			'aaa{{:Article1}}bbb{{:Article2}}ccc'
 		);
