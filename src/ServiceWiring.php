@@ -1,5 +1,6 @@
 <?php
 
+use MediaWiki\Extension\Lakat\Domain\BucketFactory;
 use MediaWiki\Extension\Lakat\LakatServices;
 use MediaWiki\Extension\Lakat\StagingService;
 use MediaWiki\Extension\Lakat\Storage\LakatStorage;
@@ -20,7 +21,13 @@ return [
 			$services->getDBLoadBalancer(),
 			LakatServices::getLakatStorage( $services ),
 			$services->getWikiPageFactory(),
-			$services->getDeletePageFactory()
+			$services->getDeletePageFactory(),
+			LakatServices::getBucketFactory( $services ),
+		);
+	},
+	BucketFactory::SERVICE_NAME => static function ( MediaWikiServices $services ): BucketFactory {
+		return new BucketFactory(
+			$services->getWikiPageFactory(),
 		);
 	},
 ];

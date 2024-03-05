@@ -5,8 +5,11 @@ namespace MediaWiki\Extension\Lakat;
 use CommentStoreComment;
 use ContentHandler;
 use Exception;
+use MediaWiki\Extension\Lakat\Domain\AtomicBucket;
+use MediaWiki\Extension\Lakat\Domain\BucketFactory;
 use MediaWiki\Extension\Lakat\Domain\BucketRefType;
 use MediaWiki\Extension\Lakat\Domain\BucketSchema;
+use MediaWiki\Extension\Lakat\Domain\MolecularBucket;
 use MediaWiki\Extension\Lakat\Storage\Exceptions\ArticleNotFoundException;
 use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\Page\DeletePageFactory;
@@ -16,6 +19,7 @@ use MediaWiki\Title\Title;
 use Status;
 use User;
 use Wikimedia\Rdbms\ILoadBalancer;
+use WikiPage;
 
 /**
  * When submitted:
@@ -38,23 +42,27 @@ class StagingService {
 
 	private DeletePageFactory $deletePageFactory;
 
+	private BucketFactory $bucketFactory;
+
 	public function __construct(
 		ILoadBalancer $loadBalancer,
 		LakatStorage $lakatStorage,
 		WikiPageFactory $wikiPageFactory,
-		DeletePageFactory $deletePageFactory
+		DeletePageFactory $deletePageFactory,
+		BucketFactory $bucketFactory
 	) {
 		$this->loadBalancer = $loadBalancer;
 		$this->lakatStorage = $lakatStorage;
 		$this->wikiPageFactory = $wikiPageFactory;
 		$this->deletePageFactory = $deletePageFactory;
+		$this->bucketFactory = $bucketFactory;
 	}
 
 	/**
 	 * Retrieve a list of modified articles in the given branch, optionally filtered.
 	 *
 	 * @param string $branchName
-	 * @param array|null $filterArticles Optionally filter articles by name
+	 * @param string[]|null $filterArticles Optionally filter articles by name
 	 * @return StagedArticle[]
 	 */
 	public function getStagedArticles( string $branchName, array $filterArticles = null ): array {
@@ -119,7 +127,7 @@ class StagingService {
 	 *
 	 * @param User $user
 	 * @param string $branchName
-	 * @param array $articles
+	 * @param string[] $articles
 	 * @param string $msg
 	 * @return void
 	 * @throws Exception
@@ -129,40 +137,64 @@ class StagingService {
 		foreach ( $this->getStagedArticles( $branchName, $articles ) as $stagedArticle ) {
 			$articleName = $stagedArticle->articleName;
 			$wikiPage = $this->wikiPageFactory->newFromTitle( Title::newFromText( "$branchName/$articleName" ) );
-			try {
-				$submitData = LakatArticleMetadata::load( $wikiPage );
-				$bucketRefs = $submitData['bucket_refs'];
+
+			// obtain parent bucket refs
+			if ($stagedArticle->isNew()) {
+				$bucketRefs = [];
+				$articleBucketRef = '';
+			} else {
+				$bucketRefs = $this->getBucketRefs( $wikiPage );
+				$articleBucketRef = array_pop( $bucketRefs );
 			}
-			catch ( Exception $e ) {
-				$bucketRefs = [ '', '' ];
+			$bucketRefIdx = 0;
+
+			$article = $this->bucketFactory->fromWikiPage( $wikiPage );
+			$buckets = [];
+			$order = [];
+			$orderIdx = 0;
+			foreach ($article->buckets() as $bucket) {
+				if ( $bucket instanceof AtomicBucket ) {
+					$buckets[] = [
+						'data' => $bucket->data(),
+						'schema' => BucketSchema::DEFAULT_ATOMIC,
+						'parent_id' => $bucketRefs[$bucketRefIdx++] ?? '',
+						'signature' => '',
+						'refs' => [],
+					];
+					$order[] = [
+						'id' => $orderIdx++,
+						'type' => BucketRefType::NO_REF,
+					];
+				} elseif ( $bucket instanceof MolecularBucket ) {
+					$sectionName = $bucket->name();
+					// submit section if it is also staged
+					$this->submitStaged( $user, $branchName, [ $sectionName ], $msg );
+					$order[] = [
+						'id' => $this->getArticleBucketRef( $branchName, $sectionName ),
+						'type' => BucketRefType::WITH_ID_REF,
+					];
+				} else {
+					throw new \LogicException( 'Invalid bucket type' );
+				}
 			}
 
-			$contents = [
-				[
-					"data" => $wikiPage->getContent()->serialize(),
-					"schema" => BucketSchema::DEFAULT_ATOMIC,
-					"parent_id" => $bucketRefs[0],
-					"signature" => base64_encode( '' ),
-					"refs" => [],
+			$buckets[] = [
+				'data' => [
+					'order' => $order,
+					'name' => $articleName,
 				],
-				[
-					"data" => [
-						"order" => [
-							[ "id" => 0, "type" => BucketRefType::NO_REF ],
-						],
-						"name" => $articleName,
-					],
-					"schema" => BucketSchema::DEFAULT_MOLECULAR,
-					"parent_id" => $bucketRefs[1],
-					"signature" => base64_encode( '' ),
-					"refs" => [],
-				],
+				'schema' => BucketSchema::DEFAULT_MOLECULAR,
+				'parent_id' => $articleBucketRef,
+				'signature' => '',
+				'refs' => [],
 			];
+
+			// submit content
 			$publicKey = '';
 			$proof = '';
+			$submitData = $this->lakatStorage->submitContentToTwig( $branchId, $buckets, $publicKey, $proof, $msg );
 
-			$submitData = $this->lakatStorage->submitContentToTwig( $branchId, $contents, $publicKey, $proof, $msg );
-			// update page metadata
+			// update page metadata - save bucket refs to be used as parent ids for the next submit
 			LakatArticleMetadata::save( $wikiPage, $user, $submitData );
 
 			$this->unstage( $branchName, $articleName );
@@ -224,5 +256,27 @@ class StagingService {
 		foreach ( $articles as $article ) {
 			$this->reset( $user, $branch, $article );
 		}
+	}
+
+	private function getBucketRefs( WikiPage $wikiPage ): array {
+		$submitData = LakatArticleMetadata::load( $wikiPage );
+		if ( !isset( $submitData['bucket_refs'] ) ) {
+			throw new Exception( 'Invalid article metadata: bucket_refs field is not set' );
+		}
+
+		$bucketRefs = $submitData['bucket_refs'];
+		if ( !is_array( $bucketRefs ) || count( $bucketRefs ) < 2 ) {
+			throw new Exception( 'Invalid article metadata: bucket_refs field is invalid' );
+		}
+
+		return $bucketRefs;
+	}
+
+	private function getArticleBucketRef( string $branch, string $article ): string {
+		$title = Title::newFromText( "$branch/$article" );
+		$page = $this->wikiPageFactory->newFromTitle( $title );
+		$bucketRefs = $this->getBucketRefs( $page );
+		// article's bucket is the last one
+		return array_pop( $bucketRefs );
 	}
 }

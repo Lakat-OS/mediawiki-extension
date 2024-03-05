@@ -8,6 +8,7 @@ use FormatJson;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Extension\Lakat\Domain\BranchType;
 use MediaWiki\Extension\Lakat\LakatServices;
+use MediaWiki\Extension\Lakat\StagedArticle;
 use MediaWiki\Extension\Lakat\StagingService;
 use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\Http\HttpRequestFactory;
@@ -49,7 +50,7 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * @covers ::listModifiedArticles
+	 * @covers ::getStagedArticles
 	 */
 	public function testListModifiedArticles() {
 		// 1. create branch
@@ -66,10 +67,10 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 
 		// check one article staged
 		$articles = $this->stagingService->getStagedArticles( $branchName );
-		$this->assertEquals( [$articleName], $articles );
+		$this->assertEquals( [$articleName], array_map( fn( StagedArticle $article ) => $article->articleName, $articles ));
 
 		// 3. submit staged articles
-		$this->stagingService->submitStaged( $this->getUser(), $branchName, $articles, 'Test submit' );
+		$this->stagingService->submitStaged( $this->getUser(), $branchName, [$articleName], 'Test submit' );
 
 		// check nothing staged
 		$modifiedArticles = $this->stagingService->getStagedArticles( $branchName );
@@ -96,7 +97,7 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 
 		// check one article staged
 		$articles = $this->stagingService->getStagedArticles( $branchName );
-		$this->assertEquals( [ $articleName ], $articles );
+		$this->assertEquals( [$articleName], array_map( fn( StagedArticle $article ) => $article->articleName, $articles ));
 
 		// check article content is saved
 		$content = $page->getContent();
@@ -137,14 +138,14 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 
 		// check one article staged
 		$articles = $this->stagingService->getStagedArticles( $branchName );
-		$this->assertEquals( [ $articleName ], $articles );
+		$this->assertEquals( [$articleName], array_map( fn( StagedArticle $article ) => $article->articleName, $articles ));
 
 		// check article content is saved
 		$content = $this->getExistingTestPage( "$branchName/$articleName" )->getContent();
 		$this->assertEquals( $articleText, $content->serialize() );
 
 		// 3. submit staged articles
-		$this->stagingService->submitStaged( $this->getUser(), $branchName, $articles, 'Test submit' );
+		$this->stagingService->submitStaged( $this->getUser(), $branchName, [$articleName], 'Test submit' );
 
 		// check nothing staged
 		$modifiedArticles = $this->stagingService->getStagedArticles( $branchName );
@@ -159,7 +160,7 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 		$content = $this->getExistingTestPage( "$branchName/$articleName" )->getContent();
 		$this->assertEquals( 'Modified test content', $content->serialize() );
 		$articles = $this->stagingService->getStagedArticles( $branchName );
-		$this->assertEquals( [ $articleName ], $articles );
+		$this->assertEquals( [$articleName], array_map( fn( StagedArticle $article ) => $article->articleName, $articles ));
 
 		// 5. reset article modifications
 		$this->stagingService->reset( $this->getUser(), $branchName, $articleName );
@@ -173,7 +174,44 @@ class StagingTest extends MediaWikiIntegrationTestCase {
 		$this->assertEquals( "\n" . $articleText, $content->serialize() );
 	}
 
-	private function createBranch( string $branchName ) {
+	/**
+	 * @covers ::submitStaged
+	 */
+	public function testStageNewArticle() {
+		// 1. create article with two sections
+		$branchName = 'BranchX';
+		$this->createBranch( $branchName );
+
+		$section1Name = 'Section 1';
+		$section1Content = 'Content 1';
+		$updateStatus = $this->editPage( "$branchName/$section1Name", $section1Content );
+		$this->assertTrue( $updateStatus->isGood() );
+
+		$section2Name = 'Section 2';
+		$section2Content = 'Content 2';
+		$updateStatus = $this->editPage( "$branchName/$section2Name", $section2Content );
+		$this->assertTrue( $updateStatus->isGood() );
+
+		$articleName = 'Test article';
+		$content = "{{:$branchName/$section1Name}}{{:$branchName/$section2Name}}";
+		$updateStatus = $this->editPage( "$branchName/$articleName", $content );
+		$this->assertTrue( $updateStatus->isGood() );
+
+		// 1.1. check everything staged
+		$this->assertTrue($this->stagingService->isStaged( $branchName, $section1Name ));
+		$this->assertTrue($this->stagingService->isStaged( $branchName, $section2Name ));
+		$this->assertTrue($this->stagingService->isStaged( $branchName, $articleName ));
+
+		// 2. submit article to Lakat
+		$this->stagingService->submitStaged( $this->getUser(), $branchName, [$articleName], 'Test submit' );
+
+		// 2.1. check nothing staged
+		$this->assertFalse($this->stagingService->isStaged( $branchName, $section1Name ));
+		$this->assertFalse($this->stagingService->isStaged( $branchName, $section2Name ));
+		$this->assertFalse($this->stagingService->isStaged( $branchName, $articleName ));
+	}
+
+	private function createBranch( string $branchName ): void {
 //		$specialPageFactory = $this->getServiceContainer()->getSpecialPageFactory();
 //		$specialPageFactory->getPage( 'CreateBranch' )->execute();
 		// create branch remotely

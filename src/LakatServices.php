@@ -2,6 +2,7 @@
 
 namespace MediaWiki\Extension\Lakat;
 
+use MediaWiki\Extension\Lakat\Domain\BucketFactory;
 use MediaWiki\Extension\Lakat\Storage\LakatStorage;
 use MediaWiki\MediaWikiServices;
 use Psr\Container\ContainerInterface;
@@ -13,5 +14,9 @@ class LakatServices {
 
 	public static function getStagingService( ContainerInterface $services = null ): StagingService {
 		return ( $services ?? MediaWikiServices::getInstance() )->getService( StagingService::SERVICE_NAME );
+	}
+
+	public static function getBucketFactory( ContainerInterface $services = null ): BucketFactory {
+		return ( $services ?? MediaWikiServices::getInstance() )->getService( BucketFactory::SERVICE_NAME );
 	}
 }
