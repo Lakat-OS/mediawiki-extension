@@ -1,0 +1,118 @@
+#!/bin/bash
+set -e
+
+# Colors
+ColorOff='\033[0m'
+Red='\033[0;31m'
+Green='\033[0;32m'
+
+DEFAULT_DIR=mediawiki
+
+if [ -z "$1" ]; then
+	DIR=$DEFAULT_DIR
+else
+	DIR=$1
+fi
+
+if [[ -d "$DIR" && -n "$(ls -A $DIR)" ]]; then
+	echo -e "${Red}Error: Directory '$DIR' exists and not empty.${ColorOff}"
+	echo "Usage: $0 [taget-dir=$DEFAULT_DIR]"
+	exit 1
+fi
+
+echo '*** Clone mediawiki core, release version ***'
+git clone --branch REL1_41 --depth=1 https://gerrit.wikimedia.org/r/mediawiki/core.git $DIR
+
+cd $DIR
+
+echo
+echo '*** Install extensions and skins ***'
+git submodule update --init --recursive skins/Vector
+
+
+echo
+echo '*** Prepare .env file ***'
+
+echo "MW_SCRIPT_PATH=/w
+MW_SERVER=http://localhost:8080
+MW_DOCKER_PORT=8080
+MEDIAWIKI_USER=Admin
+MEDIAWIKI_PASSWORD=dockerpass
+XDEBUG_CONFIG=
+XDEBUG_ENABLE=true
+XHPROF_ENABLE=true
+MW_DOCKER_UID=$(id -u)
+MW_DOCKER_GID=$(id -g)" >> .env
+
+
+echo
+echo '*** Prepare docker-compose.override.yml ***'
+
+echo 'version: "3.7"
+
+services:
+
+  mysql:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: my_root_pass
+      MYSQL_DATABASE: my_wiki
+      MYSQL_USER: wiki
+      MYSQL_PASSWORD: my_wiki_pass
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    healthcheck:
+      test: "mysql -u root -pmy_root_pass -e \"SHOW DATABASES;\""
+      interval: 2s
+      timeout: 20s
+      retries: 10
+    volumes:
+      - ./cache/mysql:/var/lib/mysql
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8090:8080
+
+  rpc-server:
+    build: https://github.com/Lakat-OS/lakat-py.git
+    ports:
+      - "3355:3355"
+    volumes:
+      - ./docker_db:/usr/src/app/file_db
+' >> docker-compose.override.yml
+
+
+echo
+echo '*** Start docker containers ***'
+docker compose up --wait
+
+echo
+echo '*** Install PHP dependencies ***'
+docker compose exec mediawiki composer update
+
+echo
+echo '*** Install mediawiki with mysql db ***'
+docker compose exec mediawiki sh -c 'php maintenance/run.php install --dbserver=mysql --dbname=my_wiki --dbuser=wiki --dbpass=my_wiki_pass --server="${MW_SERVER}" --scriptpath="${MW_SCRIPT_PATH}" --pass=${MEDIAWIKI_PASSWORD} MediaWiki ${MEDIAWIKI_USER}'
+
+echo
+echo '*** Install Lakat extension ***'
+git clone https://github.com/Lakat-OS/mediawiki-extension.git extensions/Lakat
+
+echo
+echo '*** Update LocalSettings.php ***'
+echo '
+wfLoadExtension( "Lakat" );
+$wgNamespacesWithSubpages[NS_MAIN] = true;
+' >> LocalSettings.php
+
+echo
+echo '*** Update database ***'
+docker compose exec mediawiki php maintenance/run.php update
+
+echo
+echo -e "${Green}Done!${ColorOff}"
+echo 'Main page: http://localhost:8080/'
+echo 'Installed extensions: http://localhost:8080/wiki/Special:Version'
