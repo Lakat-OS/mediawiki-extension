@@ -95,6 +95,7 @@ docker compose exec mediawiki composer update
 
 echo
 echo '*** Install mediawiki with mysql db ***'
+# mysql server should be up and running before execution of this command
 docker compose exec mediawiki sh -c 'php maintenance/run.php install --dbserver=mysql --dbname=my_wiki --dbuser=wiki --dbpass=my_wiki_pass --server="${MW_SERVER}" --scriptpath="${MW_SCRIPT_PATH}" --pass=${MEDIAWIKI_PASSWORD} MediaWiki ${MEDIAWIKI_USER}'
 
 echo
